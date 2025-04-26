@@ -1,8 +1,6 @@
-//你好世界，为了测试多文件场景，分开在了不同的文件中
 
 
-
-import {onVariableUpdated, preprocessStat, updateState} from "./state_update";
+import {variable_events} from "./main";
 
 export function trimQuotesAndBackslashes(str: string): string {
   // Regular expression to match backslashes and quotes at the beginning and end
@@ -135,6 +133,71 @@ function pathFix(path: string) : string
     return path;
 }
 
+export async function updateVariables(current_message_content: string, variables: any) : Promise<boolean> {
+
+    var out_is_modifed = false;
+    await eventEmit(variable_events.VARIABLE_UPDATE_STARTED, variables, out_is_modifed);
+    var out_status: Record<string, any> = _.cloneDeep(variables);
+    var matched_set = extractSetCommands(current_message_content);
+    var variable_modified = false;
+    for (const setCommand of matched_set) {
+        var {path, newValue, reason} = setCommand;
+        path = pathFix(path);
+
+        if (_.has(variables.stat_data, path)) {
+            const currentValue = _.get(variables.stat_data, path);
+            //有时候llm会返回整个数组，处理它
+            if (_.isString(newValue) && newValue.trim().startsWith("[") && newValue.trim().endsWith("]")) {
+                try {
+                    const parsedArray = JSON.parse(newValue);
+                    if (Array.isArray(parsedArray) && parsedArray.length > 0) {
+                        newValue = parsedArray[0];
+                    }
+                } catch (error: any) {
+                    console.error(`Error parsing JSON array for '${path}': ${error.message}`);
+                }
+            }
+            // Check the type of the current value
+            if (typeof currentValue === "number") {
+                // If the current value is a number, convert the new value to a number
+                const newValueNumber = Number(newValue);
+                _.set(variables.stat_data, path, newValueNumber);
+                const display_str = `${currentValue}->${newValueNumber} (${reason})`;
+                _.set(out_status.stat_data, path, display_str);
+                variable_modified = true;
+                console.info(`Set '${path}' to '${newValueNumber}' (${reason})`);
+            } else if (Array.isArray(currentValue) && currentValue.length === 2) {
+                // If the current value is of type ValueWithDescription<T>
+                const newValueParsed =
+                    (typeof currentValue[0] === "number") ? Number(newValue) : trimQuotesAndBackslashes(newValue);
+                currentValue[0] = newValueParsed;
+                _.set(variables.stat_data, path, currentValue);
+                const display_str = `${currentValue[0]}->${newValue}(${reason})`;
+                _.set(out_status.stat_data, path, display_str);
+                variable_modified = true;
+                console.info(`Set '${path}' to '${newValueParsed}' (${reason})`);
+                // Call the onVariableUpdated function after updating the variable
+                await eventEmit(variable_events.SINGLE_VARIABLE_UPDATED, variables.stat_data, path, currentValue[0], newValueParsed);
+            } else {
+                // Otherwise, set the new value directly
+                const trimmedNewValue = trimQuotesAndBackslashes(newValue);
+                _.set(variables.stat_data, path, trimmedNewValue);
+                const display_str = `${currentValue}->${trimmedNewValue} (${reason})`;
+                _.set(out_status.stat_data, path, display_str);
+                variable_modified = true;
+                console.info(`Set '${path}' to '${trimmedNewValue}' (${reason})`);
+            }
+        } else {
+            const display_str = `undefined Path: ${path}->${newValue} (${reason})`;
+            console.error(display_str);
+        }
+    }
+
+    variables.display_data = out_status.stat_data;
+    await eventEmit(variable_events.VARIABLE_UPDATE_ENDED, variables, out_is_modifed);
+    return variable_modified || out_is_modifed;
+}
+
 export async function handleResponseMessage() {
 
 
@@ -144,13 +207,6 @@ export async function handleResponseMessage() {
         var current_chat_msg = last_chat_msg_list[last_chat_msg_list.length - 1];
         if (current_chat_msg.role != "assistant")
             return;
-        if(current_chat_msg.message.includes("世界开始转动") || current_chat_msg.message.includes("世界正在转动"))
-        {
-            console.log("streaming content,ignore.");
-            return;
-        }
-        if (current_chat_msg.name === "悠纪")
-            return;//无视
         var content_modified: boolean = false;
         var current_message_content = current_chat_msg.message;
 
@@ -161,75 +217,19 @@ export async function handleResponseMessage() {
             return;
         }
 
-        preprocessStat(variables.stat_data);
 
-        var out_status: Record<string, any> = _.cloneDeep(variables);
+
+
 
 
 // 使用正则解析 _.set(${path}, ${newvalue});//${reason} 格式的部分，并遍历结果
         var variable_modified: boolean = false;
-        var matched_set = extractSetCommands(current_message_content);
-        for (const setCommand of matched_set) {
-            var {path, newValue, reason} = setCommand;
-            path = pathFix(path);
-
-            if (_.has(variables.stat_data, path)) {
-                const currentValue = _.get(variables.stat_data, path);
-                //有时候llm会返回整个数组，处理它
-                if (_.isString(newValue) && newValue.trim().startsWith("[") && newValue.trim().endsWith("]")) {
-                    try {
-                        const parsedArray = JSON.parse(newValue);
-                        if (Array.isArray(parsedArray) && parsedArray.length > 0) {
-                            newValue = parsedArray[0];
-                        }
-                    } catch (error : any) {
-                        console.error(`Error parsing JSON array for '${path}': ${error.message}`);
-                    }
-                }
-                // Check the type of the current value
-                if (typeof currentValue === "number") {
-                    // If the current value is a number, convert the new value to a number
-                    const newValueNumber = Number(newValue);
-                    _.set(variables.stat_data, path, newValueNumber);
-                    const display_str = `${currentValue}->${newValueNumber} (${reason})`;
-                    _.set(out_status.stat_data, path, display_str);
-                    variable_modified = true;
-                    console.info(`Set '${path}' to '${newValueNumber}' (${reason})`);
-                } else if (Array.isArray(currentValue) && currentValue.length === 2) {
-                    // If the current value is of type ValueWithDescription<T>
-                    const newValueParsed =
-                        (typeof currentValue[0] === "number") ? Number(newValue) : trimQuotesAndBackslashes(newValue);
-                    currentValue[0] = newValueParsed;
-                    _.set(variables.stat_data, path, currentValue);
-                    const display_str = `${currentValue[0]}->${newValue}(${reason})`;
-                    _.set(out_status.stat_data, path, display_str);
-                    variable_modified = true;
-                    console.info(`Set '${path}' to '${newValueParsed}' (${reason})`);
-                    // Call the onVariableUpdated function after updating the variable
-                    onVariableUpdated(variables.stat_data, path, currentValue[0], newValueParsed);
-                } else {
-                    // Otherwise, set the new value directly
-                    const trimmedNewValue = trimQuotesAndBackslashes(newValue);
-                    _.set(variables.stat_data, path, trimmedNewValue);
-                    const display_str = `${currentValue}->${trimmedNewValue} (${reason})`;
-                    _.set(out_status.stat_data, path, display_str);
-                    variable_modified = true;
-                    console.info(`Set '${path}' to '${trimmedNewValue}' (${reason})`);
-                }
-            } else {
-                const display_str = `undefined Path: ${path}->${newValue} (${reason})`;
-                console.error(display_str);
-            }
-        }
-
-
-        const updateStateResult = await updateState(variables);
-        variable_modified = variable_modified || updateStateResult;
+        variable_modified = variable_modified || await updateVariables(current_message_content, variables);
         if (variable_modified) {
             //更新到当前聊天
             await replaceVariables(variables);
         }
-        await setChatMessage({data: {display_data: out_status.stat_data, stat_data: variables.stat_data}}, last_message, {refresh: 'none'});
+        await setChatMessage({data: variables}, last_message, {refresh: 'none'});
 
         //如果是ai人物，则不插入
         if (!current_message_content.includes("<CharView")) {

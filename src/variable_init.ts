@@ -1,318 +1,84 @@
 
-// @ts-ignore
-function migrateV01(variables : Record<string, any>)
-{
+// 整体游戏数据类型
+import {updateVariables} from "./function";
+import {GameData} from "./main";
 
-    if (_.has(variables, 'stat_data.悠纪.日程'))
-    {
-        variables.stat_data.悠纪.衣着 = {
-            上身: '未知',
-            下身: '未知',
-            内衣: '未知',
-            内裤: '未知'
-        }
-    }
-}
+type LorebookEntry = {
+    content: string;
+    comment?: string;
+};
 
-export function getDefaultData() : GameData {
-    return {
-        "经历": {},
-        "日期": ["周一", "今天的日期，只读"],
-        "备注": ["", "刚刚发生的事情，只读"],
-        "当前事件": ["", "仅在剧情要求更新时更新"],
-        "user": {
-            "地点": ["central_control_tower.接入仓室", "user当前的地点，每一轮对话后都应当更新地点，移动、前往其他地点路上也要更新"],
-            "剩余时间": [2, "每当user进行一个非观察非对话的行动后减1。"],
-            "时段": ["上午", "取值包含 上午,下午,晚上 只读"],
-            "重要物品": ["红色发带", "获得重要物品时更新"],
-            "重要记忆": ["无", "获得重要的经历时更新"],
-            "认知": {
-                "central_control_tower": ["未知", "user是否知道对应地点存在，得知后变为 已知"],
-                "eco_garden": ["未知", "user是否知道对应地点存在，得知后变为 已知"],
-                "energy_hub": ["未知", "user是否知道对应地点存在，得知后变为 已知"],
-                "data_center_zone": ["未知", "user是否知道对应地点存在，得知后变为 已知"],
-            },
-        },
-        "暮莲": {
-            "地点": ["central_control_tower.暮莲个人房间", "暮莲当前的地点，每一轮对话后都应当更新地点，移动、前往其他地点路上也要更新"],
-            "时段": ["未知", "有效的取值为 上午,下午,晚上 每当进行一个行动后，更新为user.时段[0] 的值"],
-            "好感度-user": [35, "暮莲对user的好感度"],
-            "好感度-透花": [35, "暮莲对透花的好感度"],
-            "重要物品": ["蓝色发带", "获得重要物品时更新"],
-            "重要记忆": ["无", "获得重要的经历时更新"],
-            "着装": ["白色修身衬衫和深蓝色裙子，袖口和领口有蓝色装饰线条，手腕上系着蓝色发带", "更新为角色当前的服装,详细描述每件衣着"],
-            "处女": ["是", "进行交融后变为否"],
-            "性行为次数": [0, "每进行一次后加一"],
-            "认知": {
-                "central_control_tower": ["已知", "只读"],
-                "eco_garden": ["已知", "只读"],
-                "energy_hub": ["已知", "只读"],
-                "data_center_zone": ["已知", "只读"],
-            },
-            "日程": {
-                "周一": {
-                    "上午": ["前往地点:central_control_tower.接入仓室 行为:迎接刚苏醒的user", "上午的计划"],
-                    "下午": ["前往地点:eco_garden.人工湖与空气净化花园 行为:检查", "下午的计划"],
-                    "晚上": ["前往地点:central_control_tower.接入仓室 行为:迎接刚苏醒的透花", "晚上的计划"]
-                },
-                "周二": {
-                    "上午": ["前往地点:data_center_zone.数据服务器室 行为:检查", "上午的计划"],
-                    "下午": ["前往地点:data_center_zone.记忆碎片库 行为:检查", "下午的计划"],
-                    "晚上": ["前往地点:eco_garden.人工湖与空气净化花园 行为:娱乐，散步", "晚上的计划"]
-                },
-                "周三": {
-                    "上午": ["前往地点:energy_hub.核聚变核心室 行为:检查", "上午的计划"],
-                    "下午": ["前往地点:eco_garden.人工湖与空气净化花园 行为:娱乐，散步", "下午的计划"],
-                    "晚上": ["前往地点:central_control_tower.暮莲个人房间 行为:绘画", "晚上的计划"]
-                },
-                "周四": {
-                    "上午": ["前往地点:eco_garden.食堂 行为:检查", "上午的计划"],
-                    "下午": ["前往地点:eco_garden.水培农业区 行为:检查", "下午的计划"],
-                    "晚上": ["前往地点:energy_hub.储能电池室 行为:检查", "晚上的计划"]
-                },
-                "周五": {
-                    "上午": ["前往地点:data_center_zone.穹顶 行为:一起看流星雨", "上午的计划"],
-                    "下午": ["空", "下午的计划"],
-                    "晚上": ["空", "晚上的计划，如果为空则更新"]
-                },
-                "周六": {
-                    "上午": ["空", "上午的计划，如果为空则更新"],
-                    "下午": ["空", "下午的计划，如果为空则更新"],
-                    "晚上": ["空", "晚上的计划，如果为空则更新"]
-                },
-                "周日": {
-                    "上午": ["空", "上午的计划，如果为空则更新"],
-                    "下午": ["空", "下午的计划，如果为空则更新"],
-                    "晚上": ["空", "晚上的计划，如果为空则更新"]
-                }
-            }
-        },
-        "透花": {
-            "地点": ["central_control_tower.接入仓室", "暮莲当前的地点，每一轮对话后都应当更新地点，移动、前往其他地点路上也要更新"],
-            "时段": ["未知", "有效的取值为 上午,下午,晚上 每当进行一个行动后，更新为user.时段[0] 的值"],
-            "好感度-user": [0, "透花对user的好感度"],
-            "好感度-暮莲": [0, "透花对暮莲的好感度"],
-            "苏醒": [0, "在从虚拟世界中登出后变为1"],
-            "重要物品": ["红色发卡", "获得重要物品时更新"],
-            "重要记忆": ["无", "获得重要的经历时更新"],
-            "着装": ["银白色一体式的虚拟世界潜入服", "更新为角色当前的服装,详细描述每件衣着"],
-            "处女": ["是", "进行交融后变为否"],
-            "性行为次数": [0, "每进行一次后加一"],
-            "认知": {
-                "central_control_tower": ["已知", "只读"],
-                "eco_garden": ["未知", "只读"],
-                "energy_hub": ["未知", "只读"],
-                "data_center_zone": ["未知", "只读"],
-            },
-            "日程": {
-                "周一": {
-                    "上午": ["前往地点:central_control_tower.接入仓室 行为:在机器内沉睡中，在破碎的虚拟世界中寻找共鸣碎片，不应醒来", "上午的计划，从虚拟世界苏醒后更新"],
-                    "下午": ["前往地点:central_control_tower.接入仓室 行为:在机器内沉睡中，在破碎的虚拟世界中找到了出口，不应醒来", "下午的计划，从虚拟世界苏醒后更新"],
-                    "晚上": ["前往地点:central_control_tower.接入仓室 行为:从沉睡中醒来，观察 central_control_tower", "晚上的计划，从虚拟世界苏醒后更新"]
-                },
-                "周二": {
-                    "上午": ["前往地点:data_center_zone.数据服务器室 行为:检查", "上午的计划"],
-                    "下午": ["前往地点:data_center_zone.记忆碎片库 行为:检查", "下午的计划"],
-                    "晚上": ["前往地点:energy_hub.核聚变核心室 行为:检查", "晚上的计划"]
-                },
-                "周三": {
-                    "上午": ["前往地点:central_control_tower.应急物资储存室 行为:探索这个区域", "上午的计划"],
-                    "下午": ["前往地点:eco_garden.人工湖与空气净化花园 行为:娱乐，散步", "下午的计划"],
-                    "晚上": ["前往地点:central_control_tower.透花个人房间 行为:安排后续日程，覆盖周一日程", "晚上的计划"]
-                },
-                "周四": {
-                    "上午": ["空", "上午的计划，如果为空则更新"],
-                    "下午": ["空", "下午的计划，如果为空则更新"],
-                    "晚上": ["空", "晚上的计划，如果为空则更新"]
-                },
-                "周五": {
-                    "上午": ["前往地点:data_center_zone.穹顶 行为:一起看流星雨", "上午的计划"],
-                    "下午": ["空", "下午的计划"],
-                    "晚上": ["空", "晚上的计划，如果为空则更新"]
-                },
-                "周六": {
-                    "上午": ["空", "上午的计划，如果为空则更新"],
-                    "下午": ["空", "下午的计划，如果为空则更新"],
-                    "晚上": ["空", "晚上的计划，如果为空则更新"]
-                },
-                "周日": {
-                    "上午": ["空", "上午的计划，如果为空则更新"],
-                    "下午": ["空", "下午的计划，如果为空则更新"],
-                    "晚上": ["空", "晚上的计划，如果为空则更新"]
-                }
-            }
-        },
-        "设施信息": {
-            "central_control_tower": {
-                "控制室": {
-                    "status": [
-                        "电力充足，可以正常监控。桌面上摆放着兰花盆栽，看起来有一阵子没浇水了。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "半圆形的宽敞空间，四周墙壁上布满了监控屏幕和数据面板，中央是一个环形控制台，上面闪烁着各色指示灯和全息投影。",
-                    "memory": "",
-                    "malfunction": ["中央穹顶保护系统核心终端出现间歇性错误，可能导致流星雨时穹顶防护罩出现偏差，从而无法防御行星表面的辐射冲击。需要调整参数修复", "当前设施的故障，进行检查后可被修复，修复后替换为空"]
-                },
-                "接入仓室": {
-                    "status": [
-                        "仓体运作稳定，对接虚拟世界的连接依旧完好。附近控制台上摆放着暮莲手绘的一幅星空速写。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "明亮而整洁的空间，一排个体舱整齐排列于房间中央，两侧的墙上是控制及监测面板，以柔和的蓝色荧光指示各舱运行情况。",
-                    "memory": "",
-                    "malfunction": ["", "无故障"]
-                },
-                "暮莲个人房间": {
-                    "status": [
-                        "房间整洁有序，但角落堆放着若干完成和未完成的绘画架，上面描绘着暮莲对虚拟与现实的思索。桌面上还有一本被多次翻阅的素描本，画作中多次出现悠纪的身影，封面挂着浅蓝色的羽毛书签。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "布置简洁舒适，整体色调为白灰与淡蓝，空间内有宽大的窗户，有一台投影仪随时可以在墙上投射夜空星象。房间中央摆放着简洁的绘图桌和悬浮光源，光线柔和适合绘画。",
-                    "memory": "",
-                    "malfunction": ["", "无故障"]
-                },
-                "应急物资储存室": {
-                    "status": [
-                        "储备物资充足，并按照标准分类整理排放。货架上偶尔摆放着暮莲随手留下的工具箱与零件。角落里有箱子标记为\"特殊情况紧急备用\"，暮莲的字迹清晰可见。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "四壁是坚固的合金货架和柜子，储备着种类齐全的食物、水资源、医药及维修工具。中间是一条整齐的过道，照明始终维持在节能又实用的状态。",
-                    "memory": "",
-                    "malfunction": ["", "无故障"]
-                },
-                "user个人房间": {
-                    "status": [
-                        "空间整齐而温暖，工作区内一块巨大显示屏保持待机状态，上头提示着各种尚未阅读的生态圈调查数据与日志记录，休息区整洁安静，适合放松沉思。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "user专属的实用型居住与工作房间，舒适而高效的布局被安排用于日常工作和休息。",
-                    "memory": "",
-                    "malfunction": ["空气净化器老化无法正常工作，可能爆炸。需要呼叫机器人替换。", "当前设施的故障，进行检查后可被修复，修复后替换为空"]
-                },
-                "透花个人房间": {
-                    "status": [
-                        "房间内保持简约整洁，墙壁上悬挂着透花收集的记忆碎片图像，工作台凌乱地摆放着分析工具与待处理的数据片段。一朵永不凋零的人造花静静摆在角落，与整体哀婉的氛围融为一体。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "属于透花的私人空间，整体风格简洁忧郁，承载着无数悲伤而倔强的回忆。",
-                    "memory": "",
-                    "malfunction": ["", "无故障"]
-                }
-            },
-            "eco_garden": {
-                "水培农业区": {
-                    "status": [
-                        "自动化系统运行良好，各类蔬果和花卉井然有序地培育中。旁边的台子上放着一套暮莲亲手设计与组装的微型园艺工具。某个苗圃旁插着手写标签:「尝试种植的新品种，希望开花。」",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "明亮且富有绿色生机的大型室内空间，各类作物在透明的营养水槽中繁密生长，通过自动导轨和机械臂进行精准管理。",
-                    "memory": "",
-                    "malfunction": ["", "无故障"]
-                },
-                "人工湖与空气净化花园": {
-                    "status": [
-                        "人工湖水质清洁稳定，湖边悬挂着暮莲亲手绘制的蓝色蝴蝶装饰物，在空气流通中微微摇曳。花园内种植着各型观赏植物，中央地带安放着一张金属材质的长椅，旁边的石桌上摆着一本没看完的小画册。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "环绕人工湖建设的开放花园空间，各种水生植物、绿植与花卉环绕。涓涓细流声融合在空气循环设施轻微的机械声中，营造出安静舒适的氛围。",
-                    "memory": "",
-                    "malfunction": ["易燃物（枯叶等）没有及时清理，可能发生火灾。需要进行清理。", "当前设施的故障，进行检查后可被修复，修复后替换为空"]
-                },
-                "食堂": {
-                    "status": [
-                        "食堂干净整洁，自动餐食制作装置轻声运转，空气中飘散着美味食物的淡淡香气。座位与餐桌摆设井井有条，墙边的小料理区设备闪烁着待机灯光。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "位于能源中心区域的餐厅，用于提供日常饮食与社交聚会，配置了自动化与少量手动烹饪设备。",
-                    "memory": "",
-                    "malfunction": ["有一台自动餐食制作装置无法正常工作，线路老化，有爆炸风险。需要将其断电处理。", "当前设施的故障，进行检查后可被修复，修复后替换为空"]
-                }
-            },
-            "energy_hub": {
-                "核聚变核心室": {
-                    "status": [
-                        "反应堆正常平稳运作，监控数据显示运行指标优良。入口柜上放置的一套防辐射服上贴着暮莲手绘的蓝色蝴蝶标志。墙上明显位置贴着暮莲写的提醒便签:「务必定期检查！」",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "巨大的封闭机械空间，核心区域被数层防辐射隔离玻璃及合金墙体包裹。主控制台置于观察窗口外侧，指示灯与液晶屏幕不间断地刷新各种能源生成数据。",
-                    "memory": "",
-                    "malfunction": ["核聚变冷却系统的冷却液循环泵老化，可能导致反应堆温度调节异常产生危险的过热状况。需要切换到备用线路，然后替换循环泵。", "当前设施的故障，进行检查后可被修复，修复后替换为空"]
-                },
-                "太阳能矩阵阵列": {
-                    "status": [
-                        "太阳能矩阵虽然老旧但依旧稳定，阵列出口处放着一本暮莲记载着维修记录的小日志，页面边缘偶尔有简易的涂鸦。入口石碑旁可见手写箴言:「光，即使微弱，也要稳稳接住。」",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "环绕生态圈外围铺设的一大片太阳能吸收装置，设施机械臂缓慢而高效地进行太阳能捕获转化，阵列之中设有人行维修通道。",
-                    "memory": "",
-                    "malfunction": ["部分镜面老化、灰尘堆积，会导致能源供给减少。需要进行清理替换。", "当前设施的故障，进行检查后可被修复，修复后替换为空"]
-                },
-                "储能电池室": {
-                    "status": [
-                        "所有能源储存单元均显示绿色满载状态，备用设备功能正常。控制台上放着一个金属框架制作的小摆件，上面镶嵌着蓝色水晶般的小饰品，暮莲曾用模型零件亲自组装而成。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "密集排布大型电池储存单元的宽阔房间，室内五颜六色的状态指示灯交替闪烁，主控制台位于室内末端，整洁而易于操控。",
-                    "memory": "",
-                    "malfunction": ["部分电池单元电极磨损严重，可能造成短路、爆炸，需要进行清理替换。", "当前设施的故障，进行检查后可被修复，修复后替换为空"]
-                }
-            },
-            "data_center_zone": {
-                "数据服务器室": {
-                    "status": [
-                        "数据区服务器稳定运行，进入方式需验证蓝色与红色发带权限。控制终端旁放有一本尘封的手写日记，封面署名被遮盖。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "整洁肃穆的机房，无数电子服务器单元并列整齐，各类数据指示灯像星辰般闪烁，整体透露出严谨的科技氛围。",
-                    "memory": "",
-                    "malfunction": ["部分电池单元电极磨损严重，可能造成短路、爆炸，需要进行清理替换。", "当前设施的故障，进行检查后可被修复，修复后替换为空"]
-                },
-                "记忆碎片库": {
-                    "status": [
-                        "冻结着大量记忆数据，房间入口处贴着一张泛黄纸片:「有些记忆，是不该忘记的。」。空间运行正常，记忆检索接口等待激活。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "封闭且低温的空间，大量存储模块整齐排放，交织着冰蓝色的细微指示光片段，四周回荡着轻微的机械冷却系统的运作声，氛围显得寂静而神秘。",
-                    "memory": "",
-                    "malfunction": ["", "无故障"]
-                },
-                "穹顶": {
-                    "status": [
-                        "透明的防护材料保持洁净通透，外界星辰清晰可见，玻璃边缘装饰着暮莲亲手绘制的淡蓝色星座图案。一侧的小桌上放着望远镜与绘星笔记本。",
-                        "因角色行为产生改变时更新"
-                    ],
-                    "description": "半球状透明防护结构位于数据中心顶部，无阻碍视野能够完美观赏到星空，中央安放有一张圆形的软垫座椅，四周环绕着低调温暖的地板灯带，营造出舒适且幽静的观星环境。",
-                    "memory": "",
-                    "malfunction": ["", "无故障"]
-                },
-            }
-        }
-    };
-}
 
 export async function initCheck() {
-    var variables = await getVariables();
-    if (_.has(variables, 'stat_data.暮莲') && variables.stat_data.当前事件 !== 'red_ribbon_secret')
+    var last_chat_msg = await getChatMessages(-1, {role: 'assistant'}) as ChatMessage[];
+    if (!last_chat_msg)
+    {
+        last_chat_msg = [];
+    }
+    if (last_chat_msg.length <= 0)
+    {
+        var first_msg = await getChatMessages(0);
+        if(first_msg && first_msg.length > 0)
+        {
+            last_chat_msg = first_msg;
+        }
+        else {
+            console.error("不存在任何一条消息，退出");
+            return;
+        }
+    }
+    var last_msg = last_chat_msg[0];
+    //检查最近一条消息的当前swipe
+    var variables = last_msg.swipes_data[last_msg.swipe_id] as GameData & Record<string, any>;
+    var lorebook_settings = await getLorebookSettings();
+    var enabled_lorebook_list = lorebook_settings.selected_global_lorebooks;
+    var char_lorebook = await getCurrentCharPrimaryLorebook();
+    if (char_lorebook !== null)
+    {
+        enabled_lorebook_list.push(char_lorebook);
+    }
+    if (!_.has(variables, 'initialized_lorebooks'))
+    {
+        variables.initialized_lorebooks = [];
+    }
+    if (!variables.stat_data) {
+        variables.stat_data = {};
+    }
+
+    var is_updated = false;
+    for (const current_lorebook in enabled_lorebook_list)
+    {
+        if (variables.initialized_lorebooks.includes(current_lorebook))
+            continue;
+        variables.initialized_lorebooks.push(current_lorebook);
+        var init_entries = await getLorebookEntries(current_lorebook) as LorebookEntry[];
+
+        for (const entry of init_entries) {
+            if (entry.comment?.includes('[InitVar]')) {
+                try {
+                    const jsonData = JSON.parse(entry.content);
+                    variables.stat_data = _.merge(variables.stat_data, jsonData);
+                } catch (e) {
+                    console.error(`Failed to parse JSON from lorebook entry: ${e}`);
+                }
+            }
+        }
+        is_updated = true;
+    }
+    if (!is_updated) {
         return;
-    var init_data: GameData = getDefaultData();
+    }
+
 
     console.info(`Init chat variables.`);
-    await insertVariables({stat_data: init_data});
+    await insertOrAssignVariables(variables);
 
-    for (var i = 0; i < 2; i++) {
-        await setChatMessage({data: {stat_data: init_data}}, 0, {refresh: 'none', swipe_id: i});
+    for (var i = 0; i < last_msg.swipes.length; i++) {
+        var current_swipe_data = _.cloneDeep(variables);
+        await updateVariables(last_msg.swipes[i], current_swipe_data);
+        await setChatMessage({data: current_swipe_data}, last_msg.message_id, {refresh: 'none', swipe_id: i});
     }
-    var latestMsg = await getLastMessageId();
-    await setChatMessage({data: {stat_data: init_data}}, latestMsg, {refresh: 'none'});
 
-
-    await updateTavernRegexesWith((regexes) => {
-                regexes.forEach((regex) => {
-                    if(regex.script_name.includes("琉璃：消除CoT"))
-                        regex.enabled = false;
-                });
-                return regexes;
-            }, {scope: "global"});
     const expected_settings = {
         /*预期设置*/
         context_percentage: 100, recursive: true
