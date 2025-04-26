@@ -1,0 +1,3 @@
+[submodule "slash-runner"]
+	path = slash-runner
+	url = https://github.com/N0VI028/JS-Slash-Runner.git
