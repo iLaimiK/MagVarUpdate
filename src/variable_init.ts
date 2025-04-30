@@ -10,7 +10,8 @@ type LorebookEntry = {
 
 
 export async function initCheck() {
-    var last_chat_msg = await getChatMessages(-1, {role: 'assistant'}) as ChatMessage[];
+    //generation_started 的最新一条是正在生成的那条。
+    var last_chat_msg = await getChatMessages(-2, {role: 'assistant'}) as ChatMessage[];
     if (!last_chat_msg)
     {
         last_chat_msg = [];
@@ -37,6 +38,10 @@ export async function initCheck() {
     {
         enabled_lorebook_list.push(char_lorebook);
     }
+    if (variables === undefined)
+    {
+        variables = {display_data: {}, initialized_lorebooks: [], stat_data: {}};
+    }
     if (!_.has(variables, 'initialized_lorebooks'))
     {
         variables.initialized_lorebooks = [];
@@ -46,7 +51,7 @@ export async function initCheck() {
     }
 
     var is_updated = false;
-    for (const current_lorebook in enabled_lorebook_list)
+    for (const current_lorebook of enabled_lorebook_list)
     {
         if (variables.initialized_lorebooks.includes(current_lorebook))
             continue;
