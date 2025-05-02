@@ -28,7 +28,7 @@ function extractSetCommands(inputText: string): SetCommand[] {
     const results: SetCommand[] = [];
 
     // 首先匹配整个 _.set 调用
-    const pattern = /_\.set\(([\s\S]*?)\);\s*(?:\/\/(.*?))?(?:\n|$)/g;
+    const pattern = /_\.set\(([\s\S]*?)\);\s*(?:\/\/(.*?))?(?:\n|$|\r)/g;
 
     let match;
     while ((match = pattern.exec(inputText)) !== null) {
@@ -170,14 +170,15 @@ export async function updateVariables(current_message_content: string, variables
                 // If the current value is of type ValueWithDescription<T>
                 const newValueParsed =
                     (typeof currentValue[0] === "number") ? Number(newValue) : trimQuotesAndBackslashes(newValue);
+                var oldValue = _.cloneDeep(currentValue[0]);
                 currentValue[0] = newValueParsed;
                 _.set(variables.stat_data, path, currentValue);
-                const display_str = `${currentValue[0]}->${newValue}(${reason})`;
+                const display_str = `${oldValue}->${newValue}(${reason})`;
                 _.set(out_status.stat_data, path, display_str);
                 variable_modified = true;
                 console.info(`Set '${path}' to '${newValueParsed}' (${reason})`);
                 // Call the onVariableUpdated function after updating the variable
-                await eventEmit(variable_events.SINGLE_VARIABLE_UPDATED, variables.stat_data, path, currentValue[0], newValueParsed);
+                await eventEmit(variable_events.SINGLE_VARIABLE_UPDATED, variables.stat_data, path, oldValue, newValueParsed);
             } else {
                 // Otherwise, set the new value directly
                 const trimmedNewValue = trimQuotesAndBackslashes(newValue);

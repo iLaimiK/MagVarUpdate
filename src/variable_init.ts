@@ -11,7 +11,14 @@ type LorebookEntry = {
 
 export async function initCheck() {
     //generation_started 的最新一条是正在生成的那条。
-    var last_chat_msg = await getChatMessages(-2, {role: 'assistant'}) as ChatMessage[];
+    var last_chat_msg :  ChatMessage[] = [];
+    try {
+        await getChatMessages(-2, {role: 'assistant'}) as ChatMessage[];
+    }
+    catch (e)
+    {
+        //在第一行时，必定发生异常。
+    }
     if (!last_chat_msg)
     {
         last_chat_msg = [];
@@ -65,6 +72,9 @@ export async function initCheck() {
                     variables.stat_data = _.merge(variables.stat_data, jsonData);
                 } catch (e) {
                     console.error(`Failed to parse JSON from lorebook entry: ${e}`);
+                    // @ts-ignore
+                    toastr.error(e.message, "Failed to parse JSON from lorebook entry", { timeOut: 5000 });
+                    return;
                 }
             }
         }

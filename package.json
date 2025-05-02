@@ -5,7 +5,8 @@
     "main": "index.js",
     "scripts": {
         "build:ts": "tsc -p ./tsconfig.json",
-        "build:webpack": "webpack -c ./webpack.config.js"
+        "build:webpack": "webpack -c ./webpack.config.js",
+        "build:webpack-example": "webpack -c ./example_src/webpack.config.js"
     },
     "repository": {
         "type": "git",
