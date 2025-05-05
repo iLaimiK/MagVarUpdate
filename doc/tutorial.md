@@ -202,6 +202,55 @@ document.addEventListener('DOMContentLoaded', initDisplay);
 我发现问题了，对于所有数组形式的输入数据，还有另一种形式是直接为字符串，如 document.getElementById('li-location').innerText = characterData.理.地点[0];，有时需要document.getElementById('li-location').innerText = characterData.理.地点; 才能取到正确结果，不需要数组。请专门提取一个 SafeGetValue 方法来处理
 ```
 
+
+追记：需要提示 llm `使用 strict:true ，并且避免使用 // 形式的注释`
+
+具体可以参考 `圣女理理` 中的 `状态栏` 正则。
+
+### 纯文本状态栏显示
+你同样可以以纯文本的形式来编写状态栏，下面是一段代码范例，将这些部分置入正则的`替换为` 部分即可：
+```ejs
+<%
+if (runType == 'render')
+{
+    function SafeGetValue(value, defaultValue = "") {
+        // 如果值不存在，返回默认值
+        if (value === undefined || value === null) {
+            return defaultValue;
+        }
+        // 如果是数组，取第一个元素
+        if (Array.isArray(value)) {
+            return value.length !== 0 ? value[0] : defaultValue;
+        }
+        // 否则直接返回值本身
+        return value;
+    }
+const data = window.TavernHelper.getVariables({type: 'message', message_id: message_id});
+const msg_data = data.display_data;
+//上面是固定写法，不用管
+ %>
+💖 当前好感度: <%- SafeGetValue(msg_data.理.好感度) %><br>
+🎁 重要物品: <%- SafeGetValue(msg_data.理.重要物品) %><br>
+🧠 重要记忆: <%- SafeGetValue(msg_data.理.重要记忆) %><br>
+👗 着装: <%- SafeGetValue(msg_data.理.着装) %><br>
+🌸 处女: <%- SafeGetValue(msg_data.理.处女) %><br>
+🔢 性行为次数: <%- SafeGetValue(msg_data.理.性行为次数) %><br>
+😊 情绪状态‑pleasure: <%- SafeGetValue(msg_data.理.情绪状态.pleasure) %><br>
+🔥 情绪状态‑arousal: <%- SafeGetValue(msg_data.理.情绪状态.arousal) %><br>
+👑 情绪状态‑dominance: <%- SafeGetValue(msg_data.理.情绪状态.dominance) %><br>
+🤝 情绪状态‑affinity: <%- SafeGetValue(msg_data.理.情绪状态.affinity) %><br>
+💭 当前所想: <%- SafeGetValue(msg_data.理.当前所想) %><br>
+<% } %>
+```
+
+这段文本一开始的部分，定义了上面章节所述的 `SafeGetValue` 的其中一种实现，然后通过 `window.TavernHelper.getVariables` 获取了当前层的变量，供之后的流程读取。
+
+每个 `<%- SafeGetValue(msg_data.路径) %>` 段，都是在取 `display_data` 中对应名称的变量。你可以按照你想要的任意形式来组织文本结构。`<br>` 代表的是html 中的换行。
+
+具体可以参考 `圣女理理` 中的 `状态栏-纯文本` 正则。
+
+
+
 # 总结和样例角色卡地址
 MVU 系统为角色卡创作者提供了一个强大而灵活的工具，使得角色的状态管理变得更加可靠和高效。通过本文的指导，我希望能够帮助更多创作者掌握这一工具，创造出更加生动、连贯和沉浸式的角色扮演体验。 无论您是经验丰富的角色卡作者，还是刚刚开始尝试创建自己的角色，MVU 系统都能为您提供实用的支持。期待看到社区中涌现出更多精彩的基于 MVU 的角色创作。
 
