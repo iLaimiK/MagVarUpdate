@@ -18,10 +18,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         // Regular expression to match backslashes and quotes at the beginning and end
         return str.replace(/^[\\"' ]*(.*?)[\\"' ]*$/, '$1');
     }
-    // @ts-ignore
-    function clamp(num, min = 0, max = 5) {
-        return Math.min(Math.max(num, min), max);
-    }
     function extractSetCommands(inputText) {
         const results = [];
         // 首先匹配整个 _.set 调用
@@ -30,7 +26,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         while ((match = pattern.exec(inputText)) !== null) {
             const fullContent = match[0];
             const paramsString = match[1]; // 括号内的所有内容
-            const comment = match[2] ? match[2].trim() : "";
+            const comment = match[2] ? match[2].trim() : '';
             // 手动解析参数，处理嵌套结构
             const params = parseParameters(paramsString);
             if (params.length >= 3) {
@@ -39,7 +35,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     path: trimQuotesAndBackslashes(params[0]),
                     oldValue: trimQuotesAndBackslashes(params[1]),
                     newValue: trimQuotesAndBackslashes(params[2]),
-                    reason: comment
+                    reason: comment,
                 });
             }
         }
@@ -96,7 +92,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             var currentMsg = await getChatMessages(startNum);
             if (currentMsg.length > 0) {
                 var variables = currentMsg[0].swipes_data[currentMsg[0].swipe_id];
-                if (_.has(variables, "stat_data")) {
+                if (_.has(variables, 'stat_data')) {
                     return variables;
                 }
             }
@@ -105,15 +101,37 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         return await getVariables();
     }
     function pathFix(path) {
-        //部分情况下llm会偷懒，那咋办嘛
-        const prefixes = ["central_control_tower", "eco_garden", "energy_hub", "data_center_zone"];
-        for (const prefix of prefixes) {
-            if (path.startsWith(prefix)) {
-                return '设施信息.' + path;
+        const segments = [];
+        let currentSegment = '';
+        let inQuotes = false;
+        let quoteChar = '';
+        for (let i = 0; i < path.length; i++) {
+            const char = path[i];
+            // Handle quotes
+            if ((char === '"' || char === "'") && (i === 0 || path[i - 1] !== '\\')) {
+                if (!inQuotes) {
+                    inQuotes = true;
+                    quoteChar = char;
+                }
+                else if (char === quoteChar) {
+                    inQuotes = false;
+                }
+                else {
+                    currentSegment += char;
+                }
+            }
+            else if (char === '.' && !inQuotes) {
+                segments.push(currentSegment);
+                currentSegment = '';
+            }
+            else {
+                currentSegment += char;
             }
         }
-        path = path.replace(/"/g, '');
-        return path;
+        if (currentSegment) {
+            segments.push(currentSegment);
+        }
+        return segments.join('.');
     }
     async function updateVariables(current_message_content, variables) {
         var out_is_modifed = false;
@@ -127,7 +145,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             if (_.has(variables.stat_data, path)) {
                 const currentValue = _.get(variables.stat_data, path);
                 //有时候llm会返回整个数组，处理它
-                if (_.isString(newValue) && newValue.trim().startsWith("[") && newValue.trim().endsWith("]")) {
+                if (_.isString(newValue) &&
+                    newValue.trim().startsWith('[') &&
+                    newValue.trim().endsWith(']')) {
                     try {
                         const parsedArray = JSON.parse(newValue);
                         if (Array.isArray(parsedArray) && parsedArray.length > 0) {
@@ -139,36 +159,45 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                 }
                 // Check the type of the current value
-                if (typeof currentValue === "number") {
+                if (typeof currentValue === 'number') {
                     // If the current value is a number, convert the new value to a number
                     const newValueNumber = Number(newValue);
+                    const oldValue = currentValue;
                     _.set(variables.stat_data, path, newValueNumber);
-                    const display_str = `${currentValue}->${newValueNumber} (${reason})`;
+                    const reason_str = reason ? `(${reason})` : '';
+                    const display_str = `${oldValue}->${newValueNumber} ${reason_str}`;
                     _.set(out_status.stat_data, path, display_str);
                     variable_modified = true;
-                    console.info(`Set '${path}' to '${newValueNumber}' (${reason})`);
+                    console.info(`Set '${path}' to '${newValueNumber}' ${reason_str}`);
+                    await eventEmit(main_1.variable_events.SINGLE_VARIABLE_UPDATED, variables.stat_data, path, oldValue, newValueNumber);
                 }
                 else if (Array.isArray(currentValue) && currentValue.length === 2) {
                     // If the current value is of type ValueWithDescription<T>
-                    const newValueParsed = (typeof currentValue[0] === "number") ? Number(newValue) : trimQuotesAndBackslashes(newValue);
-                    var oldValue = _.cloneDeep(currentValue[0]);
+                    const newValueParsed = typeof currentValue[0] === 'number'
+                        ? Number(newValue)
+                        : trimQuotesAndBackslashes(newValue);
+                    const oldValue = _.cloneDeep(currentValue[0]);
                     currentValue[0] = newValueParsed;
                     _.set(variables.stat_data, path, currentValue);
-                    const display_str = `${oldValue}->${newValue}(${reason})`;
+                    const reason_str = reason ? `(${reason})` : '';
+                    const display_str = `${oldValue}->${newValue} ${reason_str}`;
                     _.set(out_status.stat_data, path, display_str);
                     variable_modified = true;
-                    console.info(`Set '${path}' to '${newValueParsed}' (${reason})`);
+                    console.info(`Set '${path}' to '${newValueParsed}' ${reason_str}`);
                     // Call the onVariableUpdated function after updating the variable
                     await eventEmit(main_1.variable_events.SINGLE_VARIABLE_UPDATED, variables.stat_data, path, oldValue, newValueParsed);
                 }
                 else {
                     // Otherwise, set the new value directly
                     const trimmedNewValue = trimQuotesAndBackslashes(newValue);
+                    const oldValue = _.cloneDeep(currentValue);
                     _.set(variables.stat_data, path, trimmedNewValue);
-                    const display_str = `${currentValue}->${trimmedNewValue} (${reason})`;
+                    const reason_str = reason ? `(${reason})` : '';
+                    const display_str = `${oldValue}->${trimmedNewValue} ${reason_str}`;
                     _.set(out_status.stat_data, path, display_str);
                     variable_modified = true;
-                    console.info(`Set '${path}' to '${trimmedNewValue}' (${reason})`);
+                    console.info(`Set '${path}' to '${trimmedNewValue}' ${reason_str}`);
+                    await eventEmit(main_1.variable_events.SINGLE_VARIABLE_UPDATED, variables.stat_data, path, oldValue, trimmedNewValue);
                 }
             }
             else {
@@ -185,47 +214,50 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         var last_chat_msg_list = await getChatMessages(last_message);
         if (last_chat_msg_list.length > 0) {
             var current_chat_msg = last_chat_msg_list[last_chat_msg_list.length - 1];
-            if (current_chat_msg.role != "assistant")
+            if (current_chat_msg.role != 'assistant')
                 return;
             var content_modified = false;
             var current_message_content = current_chat_msg.message;
             //更新变量状态，从最后一条之前的取，local优先级最低
             const variables = await getLastValidVariable(last_message - 1);
-            if (!_.has(variables, "stat_data")) {
-                console.error("cannot found stat_data.");
+            if (!_.has(variables, 'stat_data')) {
+                console.error('cannot found stat_data.');
                 return;
             }
             // 使用正则解析 _.set(${path}, ${newvalue});//${reason} 格式的部分，并遍历结果
             var variable_modified = false;
-            variable_modified = variable_modified || await updateVariables(current_message_content, variables);
+            variable_modified =
+                variable_modified || (await updateVariables(current_message_content, variables));
             if (variable_modified) {
                 //更新到当前聊天
                 await replaceVariables(variables);
             }
             await setChatMessage({ data: variables }, last_message, { refresh: 'none' });
             //如果是ai人物，则不插入
-            if (!current_message_content.includes("<CharView")) {
-                if (!current_message_content.includes("<StatusPlaceHolderImpl/>")) {
+            if (!current_message_content.includes('<CharView')) {
+                if (!current_message_content.includes('<StatusPlaceHolderImpl/>')) {
                     //替换状态为实际的显示内容
-                    if (current_message_content.includes("<StatusPlaceHolder/>")) {
+                    if (current_message_content.includes('<StatusPlaceHolder/>')) {
                         //const display_str = "```\n" + YAML.stringify(out_status.stat_data, 2) + "```\n";
                         //保证在输出完成后，才会渲染。
-                        const display_str = "<StatusPlaceHolderImpl/>"; //status_entry.content;
+                        const display_str = '<StatusPlaceHolderImpl/>'; //status_entry.content;
                         //const display_str = "```\n" + vanilla_str + "```\n";
-                        current_message_content = current_message_content.replace("<StatusPlaceHolder/>", display_str);
+                        current_message_content = current_message_content.replace('<StatusPlaceHolder/>', display_str);
                         content_modified = true;
                     }
                     else {
                         //如果没有，则固定插入到文本尾部
-                        const display_str = "<StatusPlaceHolderImpl/>"; //status_entry.content;
-                        current_message_content += "\n\n" + display_str;
+                        const display_str = '<StatusPlaceHolderImpl/>'; //status_entry.content;
+                        current_message_content += '\n\n' + display_str;
                         content_modified = true;
                     }
                 }
             }
             if (content_modified) {
                 console.info(`Replace content....`);
-                await setChatMessage({ message: current_message_content }, last_message, { refresh: 'display_and_render_current' });
+                await setChatMessage({ message: current_message_content }, last_message, {
+                    refresh: 'display_and_render_current',
+                });
             }
         }
         //eventRemoveListener(tavern_events.GENERATION_ENDED, hello);
@@ -250,9 +282,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     eventOn(tavern_events.MESSAGE_SENT, variable_init_1.initCheck);
     eventOn(tavern_events.GENERATION_STARTED, variable_init_1.initCheck);
     exports.variable_events = {
-        SINGLE_VARIABLE_UPDATED: "mag_variable_updated",
-        VARIABLE_UPDATE_ENDED: "mag_variable_update_ended",
-        VARIABLE_UPDATE_STARTED: "mag_variable_update_started"
+        SINGLE_VARIABLE_UPDATED: 'mag_variable_updated',
+        VARIABLE_UPDATE_ENDED: 'mag_variable_update_ended',
+        VARIABLE_UPDATE_STARTED: 'mag_variable_update_started',
     };
 }).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
 		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -274,7 +306,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         //generation_started 的最新一条是正在生成的那条。
         var last_chat_msg = [];
         try {
-            await getChatMessages(-2, { role: 'assistant' });
+            (await getChatMessages(-2, { role: 'assistant' }));
         }
         catch (e) {
             //在第一行时，必定发生异常。
@@ -288,7 +320,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 last_chat_msg = first_msg;
             }
             else {
-                console.error("不存在任何一条消息，退出");
+                console.error('不存在任何一条消息，退出');
                 return;
             }
         }
@@ -315,7 +347,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             if (variables.initialized_lorebooks.includes(current_lorebook))
                 continue;
             variables.initialized_lorebooks.push(current_lorebook);
-            var init_entries = await getLorebookEntries(current_lorebook);
+            var init_entries = (await getLorebookEntries(current_lorebook));
             for (const entry of init_entries) {
                 if (entry.comment?.includes('[InitVar]')) {
                     try {
@@ -325,7 +357,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     catch (e) {
                         console.error(`Failed to parse JSON from lorebook entry: ${e}`);
                         // @ts-ignore
-                        toastr.error(e.message, "Failed to parse JSON from lorebook entry", { timeOut: 5000 });
+                        toastr.error(e.message, 'Failed to parse JSON from lorebook entry', {
+                            timeOut: 5000,
+                        });
                         return;
                     }
                 }
@@ -340,11 +374,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         for (var i = 0; i < last_msg.swipes.length; i++) {
             var current_swipe_data = _.cloneDeep(variables);
             await (0, function_1.updateVariables)(last_msg.swipes[i], current_swipe_data);
-            await setChatMessage({ data: current_swipe_data }, last_msg.message_id, { refresh: 'none', swipe_id: i });
+            await setChatMessage({ data: current_swipe_data }, last_msg.message_id, {
+                refresh: 'none',
+                swipe_id: i,
+            });
         }
         const expected_settings = {
             /*预期设置*/
-            context_percentage: 100, recursive: true
+            context_percentage: 100,
+            recursive: true,
         };
         const settings = await getLorebookSettings();
         if (_.isEqual(_.merge({}, settings, expected_settings), settings)) {

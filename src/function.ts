@@ -180,7 +180,7 @@ export async function updateVariables(
                 const oldValue = currentValue;
                 _.set(variables.stat_data, path, newValueNumber);
                 const reason_str = reason ? `(${reason})` : '';
-                const display_str = `${currentValue}->${newValueNumber} ${reason_str}`;
+                const display_str = `${oldValue}->${newValueNumber} ${reason_str}`;
                 _.set(out_status.stat_data, path, display_str);
                 variable_modified = true;
                 console.info(`Set '${path}' to '${newValueNumber}' ${reason_str}`);
@@ -219,7 +219,7 @@ export async function updateVariables(
                 const oldValue = _.cloneDeep(currentValue);
                 _.set(variables.stat_data, path, trimmedNewValue);
                 const reason_str = reason ? `(${reason})` : '';
-                const display_str = `${currentValue}->${trimmedNewValue} ${reason_str}`;
+                const display_str = `${oldValue}->${trimmedNewValue} ${reason_str}`;
                 _.set(out_status.stat_data, path, display_str);
                 variable_modified = true;
                 console.info(`Set '${path}' to '${trimmedNewValue}' ${reason_str}`);
