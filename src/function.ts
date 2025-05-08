@@ -109,6 +109,40 @@ export async function getLastValidVariable(startNum: number): Promise<Record<str
     return await getVariables();
 }
 
+function pathFix(path: string): string {
+    const segments = [];
+    let currentSegment = "";
+    let inQuotes = false;
+    let quoteChar = "";
+
+    for (let i = 0; i < path.length; i++) {
+        const char = path[i];
+
+        // Handle quotes
+        if ((char === '"' || char === "'") && (i === 0 || path[i - 1] !== "\\")) {
+            if (!inQuotes) {
+                inQuotes = true;
+                quoteChar = char;
+            } else if (char === quoteChar) {
+                inQuotes = false;
+            } else {
+                currentSegment += char;
+            }
+        } else if (char === "." && !inQuotes) {
+            segments.push(currentSegment);
+            currentSegment = "";
+        } else {
+            currentSegment += char;
+        }
+    }
+
+    if (currentSegment) {
+        segments.push(currentSegment);
+    }
+
+    return segments.join(".");
+}
+
 export async function updateVariables(current_message_content: string, variables: any): Promise<boolean> {
     var out_is_modifed = false;
     await eventEmit(variable_events.VARIABLE_UPDATE_STARTED, variables, out_is_modifed);
@@ -117,6 +151,7 @@ export async function updateVariables(current_message_content: string, variables
     var variable_modified = false;
     for (const setCommand of matched_set) {
         var { path, newValue, reason } = setCommand;
+        path = pathFix(path);
 
         if (_.has(variables.stat_data, path)) {
             const currentValue = _.get(variables.stat_data, path);
