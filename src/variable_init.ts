@@ -1,37 +1,29 @@
-
 // 整体游戏数据类型
-import {updateVariables} from "./function";
-import {GameData} from "./main";
+import { updateVariables } from './function';
+import { GameData } from './main';
 
 type LorebookEntry = {
     content: string;
     comment?: string;
 };
 
-
 export async function initCheck() {
     //generation_started 的最新一条是正在生成的那条。
-    var last_chat_msg :  ChatMessage[] = [];
+    var last_chat_msg: ChatMessage[] = [];
     try {
-        await getChatMessages(-2, {role: 'assistant'}) as ChatMessage[];
-    }
-    catch (e)
-    {
+        (await getChatMessages(-2, { role: 'assistant' })) as ChatMessage[];
+    } catch (e) {
         //在第一行时，必定发生异常。
     }
-    if (!last_chat_msg)
-    {
+    if (!last_chat_msg) {
         last_chat_msg = [];
     }
-    if (last_chat_msg.length <= 0)
-    {
+    if (last_chat_msg.length <= 0) {
         var first_msg = await getChatMessages(0);
-        if(first_msg && first_msg.length > 0)
-        {
+        if (first_msg && first_msg.length > 0) {
             last_chat_msg = first_msg;
-        }
-        else {
-            console.error("不存在任何一条消息，退出");
+        } else {
+            console.error('不存在任何一条消息，退出');
             return;
         }
     }
@@ -41,16 +33,13 @@ export async function initCheck() {
     var lorebook_settings = await getLorebookSettings();
     var enabled_lorebook_list = lorebook_settings.selected_global_lorebooks;
     var char_lorebook = await getCurrentCharPrimaryLorebook();
-    if (char_lorebook !== null)
-    {
+    if (char_lorebook !== null) {
         enabled_lorebook_list.push(char_lorebook);
     }
-    if (variables === undefined)
-    {
-        variables = {display_data: {}, initialized_lorebooks: [], stat_data: {}};
+    if (variables === undefined) {
+        variables = { display_data: {}, initialized_lorebooks: [], stat_data: {} };
     }
-    if (!_.has(variables, 'initialized_lorebooks'))
-    {
+    if (!_.has(variables, 'initialized_lorebooks')) {
         variables.initialized_lorebooks = [];
     }
     if (!variables.stat_data) {
@@ -58,12 +47,10 @@ export async function initCheck() {
     }
 
     var is_updated = false;
-    for (const current_lorebook of enabled_lorebook_list)
-    {
-        if (variables.initialized_lorebooks.includes(current_lorebook))
-            continue;
+    for (const current_lorebook of enabled_lorebook_list) {
+        if (variables.initialized_lorebooks.includes(current_lorebook)) continue;
         variables.initialized_lorebooks.push(current_lorebook);
-        var init_entries = await getLorebookEntries(current_lorebook) as LorebookEntry[];
+        var init_entries = (await getLorebookEntries(current_lorebook)) as LorebookEntry[];
 
         for (const entry of init_entries) {
             if (entry.comment?.includes('[InitVar]')) {
@@ -73,7 +60,9 @@ export async function initCheck() {
                 } catch (e) {
                     console.error(`Failed to parse JSON from lorebook entry: ${e}`);
                     // @ts-ignore
-                    toastr.error(e.message, "Failed to parse JSON from lorebook entry", { timeOut: 5000 });
+                    toastr.error(e.message, 'Failed to parse JSON from lorebook entry', {
+                        timeOut: 5000,
+                    });
                     return;
                 }
             }
@@ -84,19 +73,22 @@ export async function initCheck() {
         return;
     }
 
-
     console.info(`Init chat variables.`);
     await insertOrAssignVariables(variables);
 
     for (var i = 0; i < last_msg.swipes.length; i++) {
         var current_swipe_data = _.cloneDeep(variables);
         await updateVariables(last_msg.swipes[i], current_swipe_data);
-        await setChatMessage({data: current_swipe_data}, last_msg.message_id, {refresh: 'none', swipe_id: i});
+        await setChatMessage({ data: current_swipe_data }, last_msg.message_id, {
+            refresh: 'none',
+            swipe_id: i,
+        });
     }
 
     const expected_settings = {
         /*预期设置*/
-        context_percentage: 100, recursive: true
+        context_percentage: 100,
+        recursive: true,
     };
     const settings = await getLorebookSettings();
     if (_.isEqual(_.merge({}, settings, expected_settings), settings)) {
