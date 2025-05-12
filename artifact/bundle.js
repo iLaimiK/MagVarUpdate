@@ -38,6 +38,20 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     reason: comment,
                 });
             }
+            else if (params.length === 2) {
+                /**
+                 * _.set('时间', "09:15");
+                 * _.set('地点', "朝槿咖啡店");
+                 * 是的，哈基米有时候会不给老值
+                 */
+                results.push({
+                    fullMatch: fullContent,
+                    path: trimQuotesAndBackslashes(params[0]),
+                    oldValue: trimQuotesAndBackslashes(params[1]),
+                    newValue: trimQuotesAndBackslashes(params[1]),
+                    reason: comment,
+                });
+            }
         }
         return results;
     }
