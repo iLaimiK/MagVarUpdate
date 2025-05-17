@@ -30,7 +30,8 @@
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "alwaysStrict": true
     },
     "include": [
         "src",

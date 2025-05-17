@@ -12,8 +12,21 @@
         "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
         "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss,md}\""
     },
+    "packageManager": "yarn@3.4.1",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/MagicalAstrogy/MagVarUpdate"
+    },
+    "browserslist": [
+        "last 2 chrome versions",
+        "last 2 firefox versions",
+        "edge >= 114",
+        "safari >= 16",
+        "not dead"
+    ],
     "private": true,
     "dependencies": {
+        "corepack": "^0.32.0",
         "json5": "^2.2.3",
         "jszip": "^3.10.1",
         "moment": "^2.30.1",
@@ -22,12 +35,14 @@
     "devDependencies": {
         "@types/jquery": "^3.5.32",
         "@types/lodash": "^4.17.16",
-        "@types/node": "^20.17.47",
+        "@types/node": "^22.15.18",
         "@typescript-eslint/eslint-plugin": "^8.32.1",
         "@typescript-eslint/parser": "^8.32.1",
         "@webpack-cli/generators": "^3.0.7",
         "bootstrap": "^5.3.6",
         "css-loader": "^6.11.0",
+        "esbuild": "^0.25.4",
+        "esbuild-register": "^3.6.0",
         "eslint": "^9.27.0",
         "eslint-config-prettier": "^10.1.5",
         "eslint-plugin-prettier": "^5.4.0",
@@ -41,6 +56,7 @@
         "style-loader": "^3.3.4",
         "ts-loader": "^9.5.2",
         "ts-mixer": "^6.0.4",
+        "ts-node": "^10.9.2",
         "tsconfig-paths-webpack-plugin": "^4.2.0",
         "typescript": "^5.8.3",
         "typescript-eslint": "^8.32.1",

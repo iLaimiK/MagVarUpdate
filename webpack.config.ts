@@ -1,11 +1,10 @@
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import url from 'node:url';
 import { Server } from 'socket.io';
 import TerserPlugin from 'terser-webpack-plugin';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import webpack from 'webpack';
-const require = createRequire(import.meta.url);
+//const require = createRequire(import.meta.url);
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,11 +32,12 @@ function watch_it(compiler: webpack.Compiler) {
 }
 
 function config(_env: any, argv: any) {
+    const isProd = argv.mode === 'production';
     return {
         experiments: {
             outputModule: true,
         },
-        devtool: argv.mode === 'production' ? false : 'eval-source-map',
+        devtool: argv.mode === 'production' ? 'source-map' : 'source-map',
         entry: path.join(__dirname, 'src/main.ts'),
         target: 'browserslist',
         output: {
@@ -77,7 +77,16 @@ function config(_env: any, argv: any) {
         plugins: [{ apply: watch_it }],
         optimization: {
             minimize: true,
-            minimizer: [new TerserPlugin()],
+            minimizer: [isProd ? new TerserPlugin() :
+                    new TerserPlugin({
+                        extractComments: false,
+                        terserOptions: {
+                            format: { beautify: true, indent_level: 2 },
+                            compress: false,
+                            mangle: false,               // 如需保留变量名，也可关掉混淆
+                        },
+                    })
+            ],
             splitChunks: {
                 chunks: 'async',
                 minSize: 20000,
