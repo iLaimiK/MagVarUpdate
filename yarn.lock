@@ -3310,14 +3310,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild-register@npm:^3.6.0":
-  version: 3.6.0
-  resolution: "esbuild-register@npm:3.6.0"
+"esbuild-register@npm:^2.5.0":
+  version: 2.6.0
+  resolution: "esbuild-register@npm:2.6.0"
   dependencies:
-    debug: ^4.3.4
-  peerDependencies:
-    esbuild: ">=0.12 <1"
-  checksum: 9221e26dde3366398a43183b600d8e9252b8003516cd766983a06c321eb07cf1b6b236948a21e4d1728c17a341c0fa52b49409c951d89fc7bf65d07d43c31a05
+    esbuild: ^0.12.8
+    jsonc-parser: ^3.0.0
+  checksum: c4d0102adf40f7285898d05b2de717baebf059cb1ac50354bb31c4c583bdcdbad4502d941eb20b676fd83f526877daf7f0c66375a1f2cd69508e9b196d916ef6
+  languageName: node
+  linkType: hard
+
+"esbuild@npm:^0.12.8":
+  version: 0.12.29
+  resolution: "esbuild@npm:0.12.29"
+  bin:
+    esbuild: bin/esbuild
+  checksum: 06a6e84eff02899b45c7d4441199f7bbc824a9f5a2d0332bfe9873963751213c71bcb03b8db96babbc45ef31c140580ff64317ee7600983fc88b84c2d9788bbf
   languageName: node
   linkType: hard
 
@@ -5060,6 +5068,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsonc-parser@npm:^3.0.0":
+  version: 3.3.1
+  resolution: "jsonc-parser@npm:3.3.1"
+  checksum: 81ef19d98d9c6bd6e4a37a95e2753c51c21705cbeffd895e177f4b542cca9cda5fda12fb942a71a2e824a9132cf119dc2e642e9286386055e1365b5478f49a47
+  languageName: node
+  linkType: hard
+
 "jsonfile@npm:^6.0.1":
   version: 6.1.0
   resolution: "jsonfile@npm:6.1.0"
@@ -5265,7 +5280,7 @@ __metadata:
     corepack: ^0.32.0
     css-loader: ^6.11.0
     esbuild: ^0.25.4
-    esbuild-register: ^3.6.0
+    esbuild-register: ^2.5.0
     eslint: ^9.27.0
     eslint-config-prettier: ^10.1.5
     eslint-plugin-prettier: ^5.4.0

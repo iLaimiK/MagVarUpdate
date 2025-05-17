@@ -35,7 +35,7 @@ jobs:
                 echo "⚠️  Lockfile missing, generating..."
                 yarn install
               fi
-      - run: NODE_OPTIONS="--require ts-node/register" yarn build
+      - run: yarn build
       - name: Commit changes
         uses: EndBug/add-and-commit@v9.1.3
         with:
