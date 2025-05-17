@@ -10,6 +10,7 @@ build/
 
 # Ignore Node.js dependencies
 node_modules/
+.yarn/
 
 # Ignore logs
 npm-debug.log*
