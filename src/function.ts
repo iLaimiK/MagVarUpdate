@@ -1,4 +1,4 @@
-import { variable_events } from './main';
+import { variable_events } from '@/main';
 
 export function trimQuotesAndBackslashes(str: string): string {
     // Regular expression to match backslashes and quotes at the beginning and end
