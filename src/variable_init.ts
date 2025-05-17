@@ -53,7 +53,7 @@ export async function initCheck() {
         var init_entries = (await getLorebookEntries(current_lorebook)) as LorebookEntry[];
 
         for (const entry of init_entries) {
-            if (entry.comment?.includes('[InitVar]')) {
+            if (entry.comment?.toLowerCase().includes('[initvar]')) {
                 try {
                     const jsonData = JSON.parse(entry.content);
                     variables.stat_data = _.merge(variables.stat_data, jsonData);
