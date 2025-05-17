@@ -363,7 +363,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             variables.initialized_lorebooks.push(current_lorebook);
             var init_entries = (await getLorebookEntries(current_lorebook));
             for (const entry of init_entries) {
-                if (entry.comment?.includes('[InitVar]')) {
+                if (entry.comment?.toLowerCase().includes('[initvar]')) {
                     try {
                         const jsonData = JSON.parse(entry.content);
                         variables.stat_data = _.merge(variables.stat_data, jsonData);
