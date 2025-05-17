@@ -1,35 +1,44 @@
 {
     "compilerOptions": {
+        "types": [
+            "jquery",
+            "jqueryui",
+            "lodash",
+            "toastr",
+            "yaml",
+        ],
         "target": "ESNext",
-        "module": "amd",
+        "module": "ESNext",
         "outDir": "dist",
+        "baseUrl": "src",
+        "paths": {
+            "@/*": [
+                "./*",
+            ]
+        },
         "moduleDetection": "auto",
-        "moduleResolution": "node10",
+        "moduleResolution": "node",
         "allowUmdGlobalAccess": true,
         "allowSyntheticDefaultImports": true,
         "strictBindCallApply": true,
         "allowJs": true,
         "checkJs": false,
         "sourceMap": true,
-        "isolatedModules": false,
-        "alwaysStrict": true,
-        "skipLibCheck": true,
         "strict": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "baseUrl": "./", // 或者是你的 tsconfig.json 所在目录的根路径
-        //"typeRoots": ["node_modules/@types", "@types"]
+        "forceConsistentCasingInFileNames": true
     },
     "include": [
-        "./src/**/*.ts",
-        "slash-runner/@types/**/*"          // 你定义的 d.ts
+        "src",
+        "slash-runner/@types",
+        "global.d.ts",
     ],
     "exclude": [
+        "**/dist/**",
         "**/node_modules/**",
-        "**/build/**"
     ]
 }

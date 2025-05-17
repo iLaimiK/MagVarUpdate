@@ -1,6 +1,6 @@
 // 整体游戏数据类型
-import { updateVariables } from './function';
-import { GameData } from './main';
+import { updateVariables } from '@/function';
+import { GameData } from '@/main';
 
 type LorebookEntry = {
     content: string;
