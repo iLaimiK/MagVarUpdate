@@ -9,9 +9,12 @@ type LorebookEntry = {
 
 export async function initCheck() {
     //generation_started 的最新一条是正在生成的那条。
-    var last_chat_msg: ChatMessage[] = [];
+    var last_chat_msg: ChatMessageSwiped[] = [];
     try {
-        (await getChatMessages(-2, { role: 'assistant' })) as ChatMessage[];
+        (await getChatMessages(-2, {
+            role: 'assistant',
+            include_swipes: true,
+        })) as ChatMessageSwiped[];
     } catch (e) {
         //在第一行时，必定发生异常。
     }
@@ -19,7 +22,9 @@ export async function initCheck() {
         last_chat_msg = [];
     }
     if (last_chat_msg.length <= 0) {
-        var first_msg = await getChatMessages(0);
+        var first_msg = await getChatMessages(0, {
+            include_swipes: true,
+        });
         if (first_msg && first_msg.length > 0) {
             last_chat_msg = first_msg;
         } else {
@@ -55,7 +60,7 @@ export async function initCheck() {
         for (const entry of init_entries) {
             if (entry.comment?.toLowerCase().includes('[initvar]')) {
                 try {
-                    const jsonData = JSON.parse(entry.content);
+                    const jsonData = JSON.parse(substitudeMacros(entry.content));
                     variables.stat_data = _.merge(variables.stat_data, jsonData);
                 } catch (e) {
                     console.error(`Failed to parse JSON from lorebook entry: ${e}`);
@@ -79,6 +84,8 @@ export async function initCheck() {
     for (var i = 0; i < last_msg.swipes.length; i++) {
         var current_swipe_data = _.cloneDeep(variables);
         await updateVariables(last_msg.swipes[i], current_swipe_data);
+        //新版本这个接口给deprecated了，但是新版本的接口不好用，先这样
+        //@ts-ignore
         await setChatMessage({ data: current_swipe_data }, last_msg.message_id, {
             refresh: 'none',
             swipe_id: i,

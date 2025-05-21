@@ -112,7 +112,7 @@ export async function getLastValidVariable(startNum: number): Promise<Record<str
         if (startNum < 0) break;
         var currentMsg = await getChatMessages(startNum);
         if (currentMsg.length > 0) {
-            var variables = currentMsg[0].swipes_data[currentMsg[0].swipe_id];
+            var variables = currentMsg[0].data;
             if (_.has(variables, 'stat_data')) {
                 return variables;
             }
@@ -279,6 +279,7 @@ export async function handleResponseMessage() {
             //更新到当前聊天
             await replaceVariables(variables);
         }
+        //@ts-ignore
         await setChatMessage({ data: variables }, last_message, { refresh: 'none' });
 
         //如果是ai人物，则不插入
@@ -307,6 +308,7 @@ export async function handleResponseMessage() {
 
         if (content_modified) {
             console.info(`Replace content....`);
+            //@ts-ignore
             await setChatMessage({ message: current_message_content }, last_message, {
                 refresh: 'display_and_render_current',
             });
