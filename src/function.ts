@@ -163,6 +163,7 @@ export async function updateVariables(
     var out_is_modifed = false;
     await eventEmit(variable_events.VARIABLE_UPDATE_STARTED, variables, out_is_modifed);
     var out_status: Record<string, any> = _.cloneDeep(variables);
+    var delta_status: Record<string, any> = { stat_data: {} };
     var matched_set = extractSetCommands(current_message_content);
     var variable_modified = false;
     for (const setCommand of matched_set) {
@@ -195,6 +196,7 @@ export async function updateVariables(
                 const reason_str = reason ? `(${reason})` : '';
                 const display_str = `${oldValue}->${newValueNumber} ${reason_str}`;
                 _.set(out_status.stat_data, path, display_str);
+                _.set(delta_status.stat_data, path, display_str);
                 variable_modified = true;
                 console.info(`Set '${path}' to '${newValueNumber}' ${reason_str}`);
                 await eventEmit(
@@ -216,6 +218,7 @@ export async function updateVariables(
                 const reason_str = reason ? `(${reason})` : '';
                 const display_str = `${oldValue}->${newValue} ${reason_str}`;
                 _.set(out_status.stat_data, path, display_str);
+                _.set(delta_status.stat_data, path, display_str);
                 variable_modified = true;
                 console.info(`Set '${path}' to '${newValueParsed}' ${reason_str}`);
                 // Call the onVariableUpdated function after updating the variable
@@ -234,6 +237,7 @@ export async function updateVariables(
                 const reason_str = reason ? `(${reason})` : '';
                 const display_str = `${oldValue}->${trimmedNewValue} ${reason_str}`;
                 _.set(out_status.stat_data, path, display_str);
+                _.set(delta_status.stat_data, path, display_str);
                 variable_modified = true;
                 console.info(`Set '${path}' to '${trimmedNewValue}' ${reason_str}`);
                 await eventEmit(
@@ -251,6 +255,7 @@ export async function updateVariables(
     }
 
     variables.display_data = out_status.stat_data;
+    variables.delta_data = delta_status.stat_data;
     await eventEmit(variable_events.VARIABLE_UPDATE_ENDED, variables, out_is_modifed);
     return variable_modified || out_is_modifed;
 }
