@@ -83,7 +83,7 @@ export async function initCheck() {
 
     for (var i = 0; i < last_msg.swipes.length; i++) {
         var current_swipe_data = _.cloneDeep(variables);
-        await updateVariables(last_msg.swipes[i], current_swipe_data);
+        await updateVariables(substitudeMacros(last_msg.swipes[i]), current_swipe_data);
         //新版本这个接口给deprecated了，但是新版本的接口不好用，先这样
         //@ts-ignore
         await setChatMessage({ data: current_swipe_data }, last_msg.message_id, {
