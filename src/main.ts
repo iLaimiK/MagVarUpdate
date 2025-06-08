@@ -10,6 +10,7 @@ export type GameData = {
     initialized_lorebooks: string[];
     stat_data: Record<string, any>;
     display_data: Record<string, any>;
+    delta_data: Record<string, any>;
 };
 
 export const variable_events = {
@@ -32,3 +33,7 @@ export type ExtendedListenerType = {
     ) => void;
     [variable_events.VARIABLE_UPDATE_ENDED]: (variables: GameData, out_is_updated: boolean) => void;
 };
+
+// 导出到窗口，便于调试
+// @ts-ignore
+window.handleResponseMessage = handleResponseMessage;
