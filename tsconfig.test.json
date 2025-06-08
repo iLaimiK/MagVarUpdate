@@ -1,0 +1,14 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "types": ["jest", "node", "jquery", "jqueryui", "lodash", "toastr", "yaml"],
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [
+        "src/**/*",
+        "tests/**/*",
+        "slash-runner/@types",
+        "global.d.ts"
+    ]
+}

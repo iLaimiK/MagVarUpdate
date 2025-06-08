@@ -42,7 +42,7 @@ export async function initCheck() {
         enabled_lorebook_list.push(char_lorebook);
     }
     if (variables === undefined) {
-        variables = { display_data: {}, initialized_lorebooks: [], stat_data: {} };
+        variables = { display_data: {}, initialized_lorebooks: [], stat_data: {}, delta_data: {} };
     }
     if (!_.has(variables, 'initialized_lorebooks')) {
         variables.initialized_lorebooks = [];
