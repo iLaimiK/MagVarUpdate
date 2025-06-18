@@ -1,6 +1,7 @@
 import { variable_events } from '@/main';
 
 export function trimQuotesAndBackslashes(str: string): string {
+    if (!_.isString(str)) return str;
     // Regular expression to match backslashes and quotes (including backticks) at the beginning and end
     return str.replace(/^[\\"'` ]*(.*?)[\\"'` ]*$/, '$1');
 }
@@ -330,11 +331,11 @@ export async function updateVariables(
                 currentValue[0] = newValueParsed;
                 _.set(variables.stat_data, path, currentValue);
                 const reason_str = reason ? `(${reason})` : '';
-                const display_str = `${oldValue}->${newValue} ${reason_str}`;
+                const display_str = `${JSON.stringify(oldValue)}->${JSON.stringify(newValue)} ${reason_str}`;
                 _.set(out_status.stat_data, path, display_str);
                 _.set(delta_status.stat_data, path, display_str);
                 variable_modified = true;
-                console.info(`Set '${path}' to '${newValueParsed}' ${reason_str}`);
+                console.info(`Set '${path}' to '${JSON.stringify(newValueParsed)}' ${reason_str}`);
                 // Call the onVariableUpdated function after updating the variable
                 await eventEmit(
                     variable_events.SINGLE_VARIABLE_UPDATED,
@@ -349,11 +350,12 @@ export async function updateVariables(
                 const oldValue = _.cloneDeep(currentValue);
                 _.set(variables.stat_data, path, trimmedNewValue);
                 const reason_str = reason ? `(${reason})` : '';
-                const display_str = `${oldValue}->${trimmedNewValue} ${reason_str}`;
+                const stringNewValue = JSON.stringify(trimmedNewValue);
+                const display_str = `${JSON.stringify(oldValue)}->${stringNewValue} ${reason_str}`;
                 _.set(out_status.stat_data, path, display_str);
                 _.set(delta_status.stat_data, path, display_str);
                 variable_modified = true;
-                console.info(`Set '${path}' to '${trimmedNewValue}' ${reason_str}`);
+                console.info(`Set '${path}' to '${stringNewValue}' ${reason_str}`);
                 await eventEmit(
                     variable_events.SINGLE_VARIABLE_UPDATED,
                     variables.stat_data,
