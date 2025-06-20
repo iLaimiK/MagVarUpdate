@@ -388,7 +388,7 @@ export async function handleVariablesInMessage(message_id: number) {
     }
     await replaceVariables(variables, { type: 'message', message_id: message_id });
 
-    if (!message_content.includes('<StatusPlaceHolderImpl/>')) {
+    if (chat_message.role !== 'user' && !message_content.includes('<StatusPlaceHolderImpl/>')) {
         await setChatMessages(
             [
                 {
