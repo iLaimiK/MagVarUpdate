@@ -44,7 +44,7 @@ export function extractSetCommands(inputText: string): SetCommand[] {
 
         // 步骤3: 使用括号配对算法找到对应的闭括号
         // 这个算法会正确处理引号内的括号，避免误匹配
-        let closeParen = findMatchingCloseParen(inputText, openParen);
+        const closeParen = findMatchingCloseParen(inputText, openParen);
         if (closeParen === -1) {
             // 如果找不到匹配的闭括号，跳过这个位置继续查找
             i = openParen + 1;
@@ -224,9 +224,12 @@ export function parseParameters(paramsString: string): string[] {
 
 export async function getLastValidVariable(message_id: number): Promise<Record<string, any>> {
     return (
-        getChatMessages(`0-${message_id}`)
-            .map(chat_message => chat_message.data)
-            .findLast(data => _.has(data, 'stat_data')) ?? getVariables()
+        structuredClone(
+            SillyTavern.chat
+                .slice(0, message_id + 1)
+                .map(chat_message => _.get(chat_message, ['variables', chat_message.swipe_id ?? 0]))
+                .findLast(variables => _.has(variables, 'stat_data'))
+        ) ?? getVariables()
     );
 }
 
@@ -268,14 +271,14 @@ export async function updateVariables(
     current_message_content: string,
     variables: any
 ): Promise<boolean> {
-    var out_is_modifed = false;
+    const out_is_modifed = false;
     await eventEmit(variable_events.VARIABLE_UPDATE_STARTED, variables, out_is_modifed);
-    var out_status: Record<string, any> = _.cloneDeep(variables);
-    var delta_status: Record<string, any> = { stat_data: {} };
-    var matched_set = extractSetCommands(current_message_content);
-    var variable_modified = false;
+    const out_status: Record<string, any> = _.cloneDeep(variables);
+    const delta_status: Record<string, any> = { stat_data: {} };
+    const matched_set = extractSetCommands(current_message_content);
+    let variable_modified = false;
     for (const setCommand of matched_set) {
-        var { path, newValue, reason } = setCommand;
+        let { path, newValue, reason } = setCommand;
         path = pathFix(path);
 
         if (_.has(variables.stat_data, path)) {
