@@ -60,7 +60,7 @@ export async function initCheck() {
         for (const entry of init_entries) {
             if (entry.comment?.toLowerCase().includes('[initvar]')) {
                 try {
-                    const jsonData = JSON.parse(substitudeMacros(entry.content));
+                    const jsonData = YAML.parse(substitudeMacros(entry.content));
                     variables.stat_data = _.merge(variables.stat_data, jsonData);
                 } catch (e) {
                     console.error(`Failed to parse JSON from lorebook entry: ${e}`);

@@ -294,7 +294,7 @@ export async function updateVariables(
                 newValue.trim().endsWith(']')
             ) {
                 try {
-                    const parsedArray = JSON.parse(newValue);
+                    const parsedArray = YAML.parse(newValue);
                     if (Array.isArray(parsedArray) && parsedArray.length > 0) {
                         newValue = parsedArray[0];
                     }
