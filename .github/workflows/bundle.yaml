@@ -42,8 +42,8 @@ jobs:
         with:
           default_author: github_actions
           message: '[bot] Bundle'
-      - id: autotag                     
-        uses: anothrNick/github-tag-action@v1.73.0
+      - name: Github Tag Bump
+        uses: anothrNick/github-tag-action@1.73.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_PREFIX: v                 
