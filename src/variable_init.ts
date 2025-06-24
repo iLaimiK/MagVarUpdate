@@ -1,97 +1,16 @@
 // 整体游戏数据类型
-import { updateVariables } from '@/function';
-import { GameData } from '@/main';
+import {updateVariables} from '@/function';
+import {GameData} from "@/variable_def";
+import {EXTENSIBLE_MARKER, generateSchema} from "@/schema";
 
 type LorebookEntry = {
     content: string;
     comment?: string;
 };
 
-// 定义魔法字符串为常量，便于管理和引用
-const EXTENSIBLE_MARKER = "$__META_EXTENSIBLE__$";
-
-// 模式生成函数
-/**
- * 递归地为数据对象生成一个模式。
- * @param data - 要为其生成模式的数据对象 (stat_data)。
- * @param oldSchemaNode - (可选) 来自旧 Schema 的对应节点，用于继承元数据。
- * @returns - 生成的模式对象。
- */
-export function generateSchema(data: any, oldSchemaNode?: any): any {
-    if (Array.isArray(data)) {
-        let isExtensible = oldSchemaNode?.extensible === true; // 默认继承旧 Schema
-
-        // 检查并处理魔法字符串
-        const markerIndex = data.indexOf(EXTENSIBLE_MARKER);
-        if (markerIndex > -1) {
-            isExtensible = true;
-            // 从数组中移除标记，以免影响后续的类型推断
-            data.splice(markerIndex, 1);
-            console.log(`Extensible marker found and removed from an array.`);
-        }
-
-        // 对于数组，关注其 elementType
-        const oldElementType = oldSchemaNode?.elementType;
-        return {
-            type: 'array',
-            extensible: isExtensible, // 应用最终的 extensible 状态
-            elementType: data.length > 0 ? generateSchema(data[0], oldElementType) : { type: 'any' },
-        };
-    }
-    if (_.isObject(data) && !_.isDate(data)) {
-        const typedData = data as Record<string, any>; // 类型断言
-        const schemaNode: any = {
-            type: 'object',
-            properties: {},
-            // 默认不可扩展，但如果旧 schema 或 $meta 定义了，则可扩展
-            extensible: oldSchemaNode?.extensible === true || typedData.$meta?.extensible === true,
-        };
-
-        // 暂存父节点的 $meta，以便在循环中使用
-        const parentMeta = typedData.$meta;
-
-        // 从 $meta 中读取信息后，将其从数据中移除，避免污染
-        if (typedData.$meta) {
-            delete typedData.$meta;
-        }
-
-        for (const key in data) {
-            const oldChildNode = oldSchemaNode?.properties?.[key];
-            const childSchema = generateSchema(typedData[key], oldChildNode);
-
-            // 一个属性是否必需？
-
-            // 1. 默认值: 如果父节点可扩展，子节点默认为可选；否则为必需。
-            let isRequired = !schemaNode.extensible;
-
-            // 2. 覆盖规则: 检查父元数据中的 'required' 数组。
-            //    如果父节点的 $meta.required 是一个数组，并且当前 key 在这个数组里，
-            //    则无论默认值是什么，都强制覆盖为必需。
-            if (Array.isArray(parentMeta?.required) && parentMeta.required.includes(key)) {
-                isRequired = true;
-            }
-
-            // 3. 检查旧 schema 的设置，作为最后的参考
-            if (oldChildNode?.required === false) {
-                // 如果旧 schema 明确说这个是可选的，那么以这个为准
-                isRequired = false;
-            } else if (oldChildNode?.required === true) {
-                isRequired = true;
-            }
-
-            childSchema.required = isRequired;
-
-            schemaNode.properties[key] = childSchema;
-        }
-        return schemaNode;
-    }
-    // 处理原始类型
-    return { type: typeof data };
-}
-
 export async function initCheck() {
     //generation_started 的最新一条是正在生成的那条。
-    var last_chat_msg: ChatMessageSwiped[] = [];
+    let last_chat_msg: ChatMessageSwiped[] = [];
     try {
         (await getChatMessages(-2, {
             role: 'assistant',
@@ -104,7 +23,7 @@ export async function initCheck() {
         last_chat_msg = [];
     }
     if (last_chat_msg.length <= 0) {
-        var first_msg = await getChatMessages(0, {
+        const first_msg = await getChatMessages(0, {
             include_swipes: true,
         });
         if (first_msg && first_msg.length > 0) {
@@ -114,12 +33,12 @@ export async function initCheck() {
             return;
         }
     }
-    var last_msg = last_chat_msg[0];
+    const last_msg = last_chat_msg[0];
     //检查最近一条消息的当前swipe
-    var variables = last_msg.swipes_data[last_msg.swipe_id] as GameData & Record<string, any>;
-    var lorebook_settings = await getLorebookSettings();
-    var enabled_lorebook_list = lorebook_settings.selected_global_lorebooks;
-    var char_lorebook = await getCurrentCharPrimaryLorebook();
+    let variables = last_msg.swipes_data[last_msg.swipe_id] as GameData & Record<string, any>;
+    const lorebook_settings = await getLorebookSettings();
+    const enabled_lorebook_list = lorebook_settings.selected_global_lorebooks;
+    const char_lorebook = await getCurrentCharPrimaryLorebook();
     if (char_lorebook !== null) {
         enabled_lorebook_list.push(char_lorebook);
     }
@@ -152,14 +71,14 @@ export async function initCheck() {
         variables.schema = {};
     }
 
-    var is_updated = false;
+    let is_updated = false;
     for (const current_lorebook of enabled_lorebook_list) {
         // 检查方式从 _.includes 变为 _.has，以适应对象结构
         if (_.has(variables.initialized_lorebooks, current_lorebook)) continue;
 
         // 将知识库名称作为键添加到对象中，值为一个空数组，用于未来存储元数据
         variables.initialized_lorebooks[current_lorebook] = [];
-        var init_entries = (await getLorebookEntries(current_lorebook)) as LorebookEntry[];
+        const init_entries = (await getLorebookEntries(current_lorebook)) as LorebookEntry[];
 
         for (const entry of init_entries) {
             if (entry.comment?.toLowerCase().includes('[initvar]')) {
@@ -248,8 +167,8 @@ export async function initCheck() {
     console.info(`Init chat variables.`);
     await insertOrAssignVariables(variables);
 
-    for (var i = 0; i < last_msg.swipes.length; i++) {
-        var current_swipe_data = _.cloneDeep(variables);
+    for (let i = 0; i < last_msg.swipes.length; i++) {
+        const current_swipe_data = _.cloneDeep(variables);
         // 此处调用的是新版 updateVariables，它将支持更多命令
         // 不再需要手动调用 substitudeMacros，updateVariables 会处理
         await updateVariables(last_msg.swipes[i], current_swipe_data);

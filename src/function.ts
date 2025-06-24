@@ -1,63 +1,7 @@
-import { variable_events } from '@/main';
+import {variable_events} from '@/variable_def';
 import * as math from 'mathjs';
-import { generateSchema } from '@/variable_init';
 
-/**
- * 辅助函数：为数据路径获取对应的 Schema 规则。
- * 能够处理数组索引，将其转换为 .elementType 来查询 Schema。
- * @param schema - 完整的 Schema 对象
- * @param path - 要查询的数据路径
- * @returns 对应路径的 Schema 节点，如果找不到则返回 null。
- */
-function getSchemaForPath(schema: any, path: string): any {
-    if (!path) {
-        return schema;
-    }
-    // 将 lodash 路径字符串转换为段数组，例如 'a.b[0].c' -> ['a', 'b', '0', 'c']
-    const pathSegments = _.toPath(path);
-    let currentSchema = schema;
-
-    for (const segment of pathSegments) {
-        if (!currentSchema) return null;
-
-        // 如果 segment 是数字（数组索引），则移动到 elementType
-        if (/^\d+$/.test(segment)) {
-            if (currentSchema.type === 'array' && currentSchema.elementType) {
-                currentSchema = currentSchema.elementType;
-            } else {
-                return null; // 路径试图索引一个非数组或无 elementType 的 schema
-            }
-        } else {
-            // 否则，作为对象属性访问
-            if (currentSchema.properties && currentSchema.properties[segment]) {
-                currentSchema = currentSchema.properties[segment];
-            } else {
-                return null; // 路径中的键在 schema 中不存在
-            }
-        }
-    }
-    return currentSchema;
-}
-
-/**
- * 调和函数：比较数据和旧 Schema，生成并应用一个与当前数据状态完全同步的新 Schema。
- * @param variables - 包含 stat_data 和旧 schema 的变量对象。
- */
-function reconcileAndApplySchema(variables: any) {
-    console.log("Reconciling schema with current data state...");
-
-    // 1. 深拷贝数据，以防 generateSchema 修改原始数据（例如删除 $meta）
-    const currentDataClone = _.cloneDeep(variables.stat_data);
-
-    // 2. 使用改进后的 generateSchema 生成一个与当前数据完全匹配的新 Schema，
-    //    并在此过程中从旧 Schema 继承元数据。
-    const newSchema = generateSchema(currentDataClone, variables.schema);
-
-    // 3. 直接用新 Schema 替换旧 Schema
-    variables.schema = newSchema;
-
-    console.log("Schema reconciliation complete.");
-}
+import {getSchemaForPath, reconcileAndApplySchema} from "@/schema";
 
 export function trimQuotesAndBackslashes(str: string): string {
     if (!_.isString(str)) return str;
@@ -78,8 +22,8 @@ export function parseCommandValue(valStr: string): any {
     if (trimmed === 'undefined') return undefined;
 
     try {
-        // 如果字符串能被 JSON.parse 解析，说明它是一个标准格式，直接返回解析结果
-        return JSON.parse(trimmed);
+        // 如果字符串能被 YAML.parse / JSON.parse 解析，说明它是一个标准格式，直接返回解析结果
+        return YAML.parse(trimmed);
     } catch (e) {
         // Handle JavaScript array or object literals
         if (
@@ -96,12 +40,6 @@ export function parseCommandValue(valStr: string): any {
                 // 如果解析失败，说明它可能是一个未加引号的字符串或数学表达式，继续往下走
             }
         }
-    }
-
-    try {
-        // 对于非标准JSON的值，使用 YAML.parse
-        return YAML.parse(trimmed);
-    } catch (e) {
     }
 
     // 如果代码走到这里，说明 trimmed 是一个未加引号的字符串，例如：
@@ -156,13 +94,28 @@ export function parseCommandValue(valStr: string): any {
 }
 
 /**
+ * Type definition for CommandNames representing a set of valid command strings.
+ *
+ * This type is used to define a finite and specific set of command string values
+ * that may be used in operations or functions requiring predefined command names.
+ *
+ * The allowed command names are:
+ * - 'set': Represents a command to set a value.
+ * - 'insert': Alias of 'assign'
+ * - 'assign': Represents a command to assign a value or reference.
+ * - 'remove': Represents a command to remove an item or data.
+ * - 'add': Represents a command to add an item or data.
+ */
+type CommandNames = 'set' | 'insert' | 'assign' | 'remove' | 'add';
+
+/**
  * 从大字符串中提取所有 .set(${path}, ${new_value});//${reason} 格式的模式
  * 并解析出每个匹配项的路径、新值和原因部分
  */
 // 接口定义：用于统一不同命令的结构
 // 新增：Command 接口，比 SetCommand 更通用
 interface Command {
-    command: 'set' | 'assign' | 'remove' | 'add';
+    command: CommandNames;
     fullMatch: string;
     args: string[];
     reason: string;
@@ -195,7 +148,7 @@ export function extractCommands(inputText: string): Command[] {
         }
 
         // 提取命令类型（set、assign、remove 或 add），并计算命令的起始位置
-        const commandType = setMatch[1] as 'set' | 'assign' | 'remove' | 'add';
+        const commandType = setMatch[1] as CommandNames;
         const setStart = i + setMatch.index;
         // 计算开括号位置，用于后续提取参数
         const openParen = setStart + setMatch[0].length;
@@ -240,6 +193,8 @@ export function extractCommands(inputText: string): Command[] {
             isValid = true; // _.set 至少需要路径和值
         else if (commandType === 'assign' && params.length >= 2)
             isValid = true; // _.assign 支持两种参数格式
+        else if (commandType === 'insert' && params.length >= 2)
+            isValid = true; // _.insert 支持两种参数格式
         else if (commandType === 'remove' && params.length >= 1)
             isValid = true; // _.remove 至少需要路径
         else if (commandType === 'add' && (/*params.length === 1 || */params.length === 2))
@@ -423,20 +378,20 @@ export async function updateVariables(
     current_message_content: string,
     variables: any
 ): Promise<boolean> {
-    var out_is_modifed = false;
+    const out_is_modifed = false;
     // 触发变量更新开始事件，通知外部系统
     await eventEmit(variable_events.VARIABLE_UPDATE_STARTED, variables, out_is_modifed);
     // 深拷贝变量对象，生成状态快照，用于记录显示数据
-    var out_status: Record<string, any> = _.cloneDeep(variables);
+    const out_status: Record<string, any> = _.cloneDeep(variables);
     // 初始化增量状态对象，记录变化详情
-    var delta_status: Record<string, any> = { stat_data: {} };
+    const delta_status: Record<string, any> = { stat_data: {} };
 
     // 重构新增：统一处理宏替换，确保命令中的宏（如 ${variable}）被替换，提升一致性
     const processed_message_content = substitudeMacros(current_message_content);
 
     // 使用重构后的 extractCommands 提取所有命令
-    let commands = extractCommands(processed_message_content);
-    var variable_modified = false;
+    const commands = extractCommands(processed_message_content);
+    let variable_modified = false;
 
     const schema = variables.schema; // 获取 schema
 
@@ -521,6 +476,7 @@ export async function updateVariables(
                 break;
             }
 
+            case 'insert':
             case 'assign': {
                 // 检查目标路径是否指向一个集合（数组或对象）
                 // 如果路径已存在且其值为原始类型（字符串、数字等），则跳过此命令，以防止结构污染
@@ -572,7 +528,7 @@ export async function updateVariables(
                     }
                 } else if (
                     // 增加 targetPath !== '' 条件，防止对根路径进行父路径检查
-                    targetPath !== '' && 
+                    targetPath !== '' &&
                     !_.get(variables.stat_data, _.toPath(targetPath).slice(0, -1).join('.'))
                 ) {
                     // 验证3：如果要插入到新路径，确保其父路径存在且可扩展
@@ -868,7 +824,7 @@ export async function updateVariables(
                 const initialValue = _.cloneDeep(_.get(variables.stat_data, path));
                 const oldValue = _.get(variables.stat_data, path);
                 let valueToAdd = oldValue;
-                let isValueWithDescription =
+                const isValueWithDescription =
                     Array.isArray(oldValue) &&
                     oldValue.length === 2 &&
                     typeof oldValue[0] !== 'object';
