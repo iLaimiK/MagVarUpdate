@@ -2,14 +2,13 @@ name: bundle
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master, beta ] 
     paths-ignore:
       - artifact/**
   workflow_dispatch:
 
 concurrency:
-  group: ${{github.workflow}}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -20,10 +19,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0                 # ← 必须
+
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-            node-version: 22
+          node-version: 22
       -   name: Corepack & Yarn
           run: |
               corepack enable
@@ -41,10 +42,10 @@ jobs:
         with:
           default_author: github_actions
           message: '[bot] Bundle'
-      - id: autotag
-        uses: phish108/autotag-action@v1.1.64
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          with-v: true
-      - if: ${{ steps.autotag.outputs.tag != '' }}
-        run: git push --delete origin ${{ steps.autotag.outputs.tag }}
+      - id: autotag                     
+        uses: anothrNick/github-tag-action@v1.73.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_PREFIX: v                 
+          RELEASE_BRANCHES: master      # 仅 master 产正式版
+          PRERELEASE_SUFFIX: beta       # beta 分支自动变成 vX.Y.Z-beta.N
