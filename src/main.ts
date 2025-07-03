@@ -1,6 +1,6 @@
-import { handleVariablesInMessage, handleVariablesInCallback} from '@/function';
+import { handleVariablesInMessage, handleVariablesInCallback } from '@/function';
 import { initCheck } from '@/variable_init';
-import {variable_events} from "@/variable_def";
+import { variable_events } from '@/variable_def';
 
 $(() => {
     eventOn(tavern_events.GENERATION_STARTED, initCheck);

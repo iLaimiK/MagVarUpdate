@@ -1,5 +1,4 @@
-import {variable_events, VariableData} from "@/variable_def";
-
+import { variable_events, VariableData } from '@/variable_def';
 
 export function trimQuotesAndBackslashes(str: string): string {
     if (!_.isString(str)) return str;
@@ -332,7 +331,9 @@ export async function updateVariables(
                 _.set(out_status.stat_data, path, display_str);
                 _.set(delta_status.stat_data, path, display_str);
                 variable_modified = true;
-                console.info(`Set '${path}' to '${trimQuotesAndBackslashes(JSON.stringify(newValueParsed))}' ${reason_str}`);
+                console.info(
+                    `Set '${path}' to '${trimQuotesAndBackslashes(JSON.stringify(newValueParsed))}' ${reason_str}`
+                );
                 // Call the onVariableUpdated function after updating the variable
                 await eventEmit(
                     variable_events.SINGLE_VARIABLE_UPDATED,
@@ -407,10 +408,11 @@ export async function handleVariablesInMessage(message_id: number) {
     }
 }
 
-
-export async function handleVariablesInCallback(message_content: string, variable_info : VariableData) {
-    if (variable_info.old_variables === undefined)
-    {
+export async function handleVariablesInCallback(
+    message_content: string,
+    variable_info: VariableData
+) {
+    if (variable_info.old_variables === undefined) {
         return;
     }
     variable_info.new_variables = _.cloneDeep(variable_info.old_variables);
@@ -418,6 +420,5 @@ export async function handleVariablesInCallback(message_content: string, variabl
 
     const modified = await updateVariables(message_content, variables);
     //如果没有修改，则不产生 newVariable
-    if (!modified)
-        delete variable_info.new_variables;
+    if (!modified) delete variable_info.new_variables;
 }
