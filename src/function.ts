@@ -1,4 +1,4 @@
-import {variable_events} from '@/variable_def';
+import {variable_events, VariableData} from '@/variable_def';
 import * as math from 'mathjs';
 
 import {getSchemaForPath, reconcileAndApplySchema} from "@/schema";
@@ -92,8 +92,7 @@ export function parseCommandValue(valStr: string): any {
     try {
         // 尝试 YAML.parse
         return YAML.parse(trimmed);
-    } catch (e) {
-    }
+    } catch (e) { /* empty */ }
 
     // 最终，返回这个去除了首尾引号的字符串
     return trimQuotesAndBackslashes(valStr);
@@ -1028,4 +1027,20 @@ export async function handleVariablesInMessage(message_id: number) {
             }
         );
     }
+}
+
+
+
+export async function handleVariablesInCallback(message_content: string, variable_info : VariableData) {
+    if (variable_info.old_variables === undefined)
+    {
+        return;
+    }
+    variable_info.new_variables = _.cloneDeep(variable_info.old_variables);
+    const variables = variable_info.new_variables;
+
+    const modified = await updateVariables(message_content, variables);
+    //如果没有修改，则不产生 newVariable
+    if (!modified)
+        delete variable_info.new_variables;
 }
