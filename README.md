@@ -6,6 +6,8 @@
 
 `example` & `example_src` 目录下，是样例角色卡 [圣女理理](https://discord.com/channels/1291925535324110879/1367723727827111998) 的世界书条目，和脚本代码，用于参考。
 
+对于 beta 分支的示例卡，可以参考[此仓库](https://gitgud.io/KazePsi/file-storage/-/tree/master/mobius/example)中的内容，或者直接来[这里](https://discord.com/channels/1134557553011998840/1380780338539663360)。
+
 ## 构建
 
 0. 请保证环境上已经正确安装好了 Node.js
