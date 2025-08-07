@@ -56,7 +56,6 @@ export declare const exported_events: {
     UPDATE_VARIABLE: string;
 };
 export type InternalData = {
-    stat_data: Record<string, any>;
     display_data: Record<string, any>;
     delta_data: Record<string, any>;
 };
