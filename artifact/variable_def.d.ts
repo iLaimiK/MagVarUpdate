@@ -42,6 +42,7 @@ export declare function isPrimitiveSchema(value: SchemaNode): value is Primitive
 export type RootAdditionalProps = {
     strictTemplate?: boolean;
     concatTemplateArray?: boolean;
+    strictSet?: boolean;
 };
 export type RootAdditionalMetaProps = {
     $meta?: StatDataMeta & RootAdditionalProps;
