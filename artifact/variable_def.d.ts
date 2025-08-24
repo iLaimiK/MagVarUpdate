@@ -6,11 +6,12 @@ export type StatDataMeta = {
     template?: TemplateType;
     [key: string]: unknown;
 };
+export type JSONPrimitive = string | number | boolean | null;
 export type StatData = {
-    [key: string]: StatData | any | StatData[];
+    [key: string]: StatData | JSONPrimitive | (StatData | JSONPrimitive)[];
 } & {
     $meta?: StatDataMeta;
-    $$arrayMeta?: boolean;
+    $arrayMeta?: boolean;
 };
 export type SchemaNode = ObjectSchemaNode | ArraySchemaNode | PrimitiveSchemaNode;
 export type ObjectSchemaNode = {
@@ -35,7 +36,9 @@ export type PrimitiveSchemaNode = {
     type: 'string' | 'number' | 'boolean' | 'any';
 };
 export type ValueWithDescription<T> = [T, string];
-export declare function isValueWithDescription<T>(value: unknown): value is ValueWithDescription<T>;
+export declare function assertVWD(_flag: boolean, _v: StatData | JSONPrimitive | (StatData | JSONPrimitive)[]): asserts _v is ValueWithDescription<StatData | JSONPrimitive>;
+export declare function isValueWithDescription(value: unknown): boolean;
+export declare function isValueWithDescriptionStatData(value: StatData | JSONPrimitive | (StatData | JSONPrimitive)[]): value is ValueWithDescription<StatData | JSONPrimitive>;
 export declare function isArraySchema(value: SchemaNode): value is ArraySchemaNode;
 export declare function isObjectSchema(value: SchemaNode): value is ObjectSchemaNode;
 export declare function isPrimitiveSchema(value: SchemaNode): value is PrimitiveSchemaNode;
@@ -100,8 +103,8 @@ export declare const variable_events: {
     readonly VARIABLE_UPDATE_STARTED: "mag_variable_update_started";
 };
 export declare const exported_events: {
-    INVOKE_MVU_PROCESS: string;
-    UPDATE_VARIABLE: string;
+    readonly INVOKE_MVU_PROCESS: "mag_invoke_mvu";
+    readonly UPDATE_VARIABLE: "mag_update_variable";
 };
 export type InternalData = {
     display_data: Record<string, any>;
@@ -111,6 +114,9 @@ export type ExtendedListenerType = {
     [variable_events.SINGLE_VARIABLE_UPDATED]: (stat_data: Record<string, any>, path: string, _oldValue: any, _newValue: any) => void;
     [variable_events.VARIABLE_UPDATE_STARTED]: (variables: MvuData, out_is_updated: boolean) => void;
     [variable_events.VARIABLE_UPDATE_ENDED]: (variables: MvuData, out_is_updated: boolean) => void;
+    [exported_events.INVOKE_MVU_PROCESS]: (message_content: string, variable_info: VariableData) => void;
+    [exported_events.UPDATE_VARIABLE]: (stat_data: Record<string, any>, path: string, newValue: any, reason: string, isRecursive: boolean) => void;
 };
+export type InitVarType = StatData & RootAdditionalMetaProps;
 export type DataCategory = 'stat' | 'display' | 'delta';
 export declare function extractRecord(category: 'stat' | 'display' | 'delta', game_data: MvuData): Record<string, any>;
