@@ -22,11 +22,7 @@
         "url": "https://github.com/MagicalAstrogy/MagVarUpdate"
     },
     "browserslist": [
-        "last 2 chrome versions",
-        "last 2 firefox versions",
-        "edge >= 114",
-        "safari >= 16",
-        "not dead"
+        "defaults and fully supports es6-module"
     ],
     "private": true,
     "dependencies": {
