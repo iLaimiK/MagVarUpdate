@@ -7,6 +7,7 @@ export type LocalizedBooleanFalse = '否';
 export type StringBoolean = string | LocalizedBooleanTrue | LocalizedBooleanFalse;
 export type MvuSettings = {
     是否显示变量更新错误: StringBoolean;
+    构建信息: string;
 };
 export declare function VerifySettings(settings: any): settings is MvuSettings;
 /**
