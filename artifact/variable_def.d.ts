@@ -52,7 +52,7 @@ export type RootAdditionalMetaProps = {
 };
 export type MvuData = {
     /** 已初始化的 lorebook 列表 */
-    initialized_lorebooks: Record<string, any[]>;
+    initialized_lorebooks?: Record<string, any[]>;
     /**
      * 状态数据 - 存储实际的变量值
      * 支持嵌套对象结构，通过路径（如 "player.health"）访问
@@ -75,7 +75,7 @@ export type MvuData = {
      * 更新时机：每次 stat_data 中的值发生变化时同步更新
      * 用途：在UI中展示变量的变化历史，让用户了解数值是如何变化的
      */
-    display_data: Record<string, any>;
+    display_data?: Record<string, any>;
     /**
      * 增量数据 - 存储本次更新中发生变化的变量
      * 格式：与 display_data 相同，"{旧值}->{新值} (原因)"
@@ -87,7 +87,7 @@ export type MvuData = {
      *
      * 用途：仅显示当前消息/操作中实际发生变化的变量，而不是所有历史变化
      */
-    delta_data: Record<string, any>;
+    delta_data?: Record<string, any>;
     schema?: ObjectSchemaNode & Partial<RootAdditionalProps>;
 };
 export interface VariableData {
