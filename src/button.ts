@@ -91,6 +91,9 @@ async function reloadInit() {
     // 6. 更新变量到最新消息
     await replaceVariables(merged_data, { type: 'message', message_id: message_id });
 
+    //@ts-ignore
+    await setChatMessage({}, message_id);
+
     await replaceVariables(merged_data, { type: 'chat' });
 
     console.info('InitVar更新完成');
